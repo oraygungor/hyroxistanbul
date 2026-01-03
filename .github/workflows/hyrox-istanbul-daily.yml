@@ -1,0 +1,53 @@
+name: Hyrox Istanbul Daily Snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub cron UTC'dir.
+    # 06:15 UTC ≈ 07:15 Copenhagen (kış) / 08:15 Copenhagen (yaz)
+    - cron: "15 6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hyrox-istanbul-daily
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run scraper (writes dated json)
+        run: |
+          mkdir -p data
+          python3 hyrox_istanbul.py "https://turkiye.hyrox.com/checkout/hyrox-istanbul-season-25-26-y3v06t" data
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Sadece değişiklik varsa commit at
+          if git status --porcelain | grep -q .; then
+            git add data/*.json || true
+            git add *.json || true
+            git commit -m "Add Hyrox Istanbul snapshot ($(date -u +'%Y-%m-%d'))"
+            git push
+          else
+            echo "No changes to commit."
+          fi
