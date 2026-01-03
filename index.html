@@ -2,605 +2,396 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Hyrox Istanbul</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Hyrox İstanbul - Bilet Takip</title>
 
-  <!-- Chart.js -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- Zoom/Pan plugin -->
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
 
   <style>
-    :root{
-      /* Hyrox-ish palette */
-      --bg0:#07090c;
-      --bg1:#0b0f14;
-      --card:rgba(255,255,255,0.06);
-      --card2:rgba(255,255,255,0.08);
-      --text:#e8edf2;
-      --muted:#9aa6b2;
-      --neon:#00ff4a;
-      --neon2:#00d9ff;
-      --danger:#ff3b6b;
-      --border:rgba(255,255,255,0.12);
-      --shadow: 0 20px 60px rgba(0,0,0,0.55);
+    :root {
+      /* Hyrox Brand Vibes: Black, Dark Greys, Vibrant Yellow/Amber */
+      --bg-body: #0f1115;
+      --bg-card: #181b21;
+      --bg-header: #000000;
+      
+      --text-main: #ffffff;
+      --text-muted: #9ca3af;
+      
+      --accent: #ffcc00; /* Hyrox Yellow */
+      --accent-glow: rgba(255, 204, 0, 0.15);
+      
+      --danger: #ef4444;
+      --success: #10b981;
+      --border: #2d3139;
     }
-    html,body{height:100%;}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      color:var(--text);
-      background:
-        radial-gradient(1200px 600px at 20% -10%, rgba(0,255,74,0.18), transparent 60%),
-        radial-gradient(900px 500px at 110% 10%, rgba(0,217,255,0.14), transparent 55%),
-        radial-gradient(900px 500px at 50% 110%, rgba(0,255,74,0.08), transparent 60%),
-        linear-gradient(180deg, var(--bg0), var(--bg1));
-      overflow-x:hidden;
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
-    .wrap{
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 28px 18px 40px;
+
+    /* HEADER */
+    header {
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
-    header{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:16px;
-      margin-bottom:18px;
-    }
-    .title{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    h1{
-      margin:0;
-      font-size: 34px;
-      line-height:1.1;
-      letter-spacing:0.2px;
+
+    .brand h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 900;
       text-transform: uppercase;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
     }
-    .sub{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .pill{
-      padding:6px 10px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,0.04);
-      border-radius: 999px;
-      backdrop-filter: blur(10px);
-    }
-    .controls{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .btn{
-      cursor:pointer;
-      user-select:none;
-      padding:10px 12px;
-      border-radius: 12px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,0.05);
-      color:var(--text);
-      font-weight:600;
-      font-size: 13px;
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      transition: transform .08s ease, border-color .15s ease, background .15s ease;
-    }
-    .btn:hover{ transform: translateY(-1px); border-color: rgba(0,255,74,0.45); }
-    .btn:active{ transform: translateY(0px); }
-    .btn.active{
-      border-color: rgba(0,255,74,0.70);
-      box-shadow: 0 0 0 1px rgba(0,255,74,0.25) inset, 0 0 30px rgba(0,255,74,0.12);
-      background: rgba(0,255,74,0.08);
-    }
-    .btn .dot{
-      width:8px;height:8px;border-radius:999px;background:var(--neon);
-      box-shadow: 0 0 12px rgba(0,255,74,0.6);
-    }
-    .card{
-      border:1px solid var(--border);
-      background: linear-gradient(180deg, var(--card), rgba(255,255,255,0.03));
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .cardTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      padding:14px 16px;
-      border-bottom:1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-    }
-    .metric{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-      min-width: 220px;
-    }
-    .metric .label{
-      color:var(--muted);
-      font-size:12px;
-    }
-    .metric .value{
-      font-size:20px;
-      font-weight:800;
-      letter-spacing:0.2px;
-    }
-    .metric .value .glow{
-      color: var(--neon);
-      text-shadow: 0 0 18px rgba(0,255,74,0.22);
-    }
-    .hint{
-      color:var(--muted);
-      font-size:12px;
-      text-align:right;
-      max-width: 360px;
-    }
-    .chartWrap{
-      padding: 10px 10px 6px;
-    }
-    canvas{ display:block; width:100%; height:520px; }
-    .footer{
-      margin-top: 12px;
-      color: var(--muted);
+    .brand span { color: var(--accent); }
+    
+    .status-badge {
       font-size: 12px;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
+      background: rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 99px;
+      color: var(--text-muted);
+      font-weight: 500;
     }
-    a{ color: var(--neon2); text-decoration:none; }
-    a:hover{ text-decoration:underline; }
-    .error{
-      margin-top: 16px;
-      padding: 14px 14px;
-      border-radius: 14px;
-      border:1px solid rgba(255,59,107,0.35);
-      background: rgba(255,59,107,0.08);
-      color: #ffd7e2;
-      display:none;
-      white-space:pre-wrap;
+
+    /* LAYOUT */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 20px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    /* KPI CARDS */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    .label { font-size: 13px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .value { font-size: 32px; font-weight: 700; color: var(--text-main); line-height: 1; }
+    .value.accent { color: var(--accent); text-shadow: 0 0 20px var(--accent-glow); }
+    
+    /* CHARTS SECTION */
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 30px 0 15px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::before {
+      content:''; display:block; width: 4px; height: 18px; background: var(--accent); border-radius: 2px;
+    }
+
+    .chart-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      height: 400px; /* Fixed height for charts */
+    }
+
+    /* UTILS */
+    .hidden { display: none; }
+    .error-box {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger);
+      color: #fca5a5;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    
+    @media (max-width: 768px) {
+      .container { padding: 15px; }
+      header { padding: 15px; flex-direction: column; align-items: flex-start; gap: 10px; }
+      .value { font-size: 28px; }
     }
   </style>
 </head>
-
 <body>
-  <div class="wrap">
-    <header>
-      <div class="title">
-        <h1>HYROX ISTANBUL</h1>
-        <div class="sub">
-          <span class="pill">Daily ticket snapshot</span>
-          <span class="pill" id="statusPill">Loading…</span>
-        </div>
-      </div>
 
-      <div class="controls">
-        <div class="btn active" id="btnTotal" title="Toplam kalan bilet">
-          <span class="dot"></span> Total
-        </div>
-        <div class="btn" id="btnByParkur" title="Parkur bazında (Top 6 + Others)">
-          <span class="dot" style="background:var(--neon2); box-shadow:0 0 12px rgba(0,217,255,0.55)"></span> By parkur
-        </div>
-        <div class="btn" id="btnReset" title="Zoom/Pan reset">
-          Reset view
-        </div>
-      </div>
-    </header>
+  <header>
+    <div class="brand">
+      <h1>Hyrox <span>Istanbul</span></h1>
+    </div>
+    <div id="lastUpdateBadge" class="status-badge">Yükleniyor...</div>
+  </header>
 
-    <div class="card">
-      <div class="cardTop">
-        <div class="metric">
-          <div class="label" id="metricLabel">Latest total remaining</div>
-          <div class="value">
-            <span class="glow" id="metricValue">—</span>
-          </div>
-        </div>
-        <div class="hint">
-          Hover: detay • Scroll: zoom • Drag: pan<br/>
-          Veriler: <code>/data/DD.MM.YYYY.json</code>
-        </div>
+  <div class="container">
+    
+    <div class="kpi-grid">
+      <div class="card">
+        <div class="label">Toplam Kalan Bilet</div>
+        <div class="value accent" id="valTotal">—</div>
       </div>
-
-      <div class="chartWrap">
-        <canvas id="chart"></canvas>
+      <div class="card">
+        <div class="label">En Çok Stok Olan Kategori</div>
+        <div class="value" id="valTopCat" style="font-size: 20px; margin-top:6px;">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Takip Edilen Gün Sayısı</div>
+        <div class="value" id="valDays">—</div>
       </div>
     </div>
 
-    <div class="footer">
-      <div id="footerLeft">—</div>
-      <div id="footerRight">—</div>
+    <div>
+      <div class="section-title">Güncel Stok Durumu (Kategori Bazlı)</div>
+      <div class="chart-container">
+        <canvas id="barChart"></canvas>
+      </div>
     </div>
 
-    <div class="error" id="errorBox"></div>
+    <div>
+      <div class="section-title">Satış Trendi (Zaman Çizelges)</div>
+      <div class="chart-container">
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+
+    <div id="errorBox" class="error-box hidden"></div>
   </div>
 
 <script>
-/* ============ CONFIG ============ */
-const DATA_DIR = "data";          // JSON folder
-const MIN_DATE = "03.01.2026";    // Start from this date (DD.MM.YYYY)
+/* ================= KONFIGÜRASYON ================= */
+const CONFIG = {
+  dataDir: "data",      // JSON dosyalarının olduğu klasör
+  minDate: "03.01.2026" // Başlangıç tarihi
+};
 
-/* ============ UTILS ============ */
-const pad2 = n => String(n).padStart(2, "0");
-function parseDDMMYYYY(s){
-  // s: "03.01.2026"
+/* ================= YARDIMCI FONKSİYONLAR ================= */
+const pad = n => String(n).padStart(2, "0");
+const parseDate = s => {
   const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(s);
-  if(!m) return null;
-  const dd = Number(m[1]), mm = Number(m[2]), yyyy = Number(m[3]);
-  const dt = new Date(Date.UTC(yyyy, mm-1, dd, 12, 0, 0));
-  return isNaN(dt.getTime()) ? null : dt;
-}
-function fileDateFromName(name){
-  // "03.01.2026.json" => "03.01.2026"
-  const m = /^(\d{2}\.\d{2}\.\d{4})\.json$/.exec(name);
-  return m ? m[1] : null;
-}
-function fmtDate(dt){
-  const dd = pad2(dt.getUTCDate());
-  const mm = pad2(dt.getUTCMonth()+1);
-  const yy = dt.getUTCFullYear();
-  return `${dd}.${mm}.${yy}`;
-}
-function sumObjectValues(obj){
-  let s = 0;
-  for(const k in obj){
-    const v = obj[k];
-    if(typeof v === "number") s += v;
-  }
-  return s;
-}
-function showError(msg){
-  const box = document.getElementById("errorBox");
-  box.style.display = "block";
-  box.textContent = msg;
-}
-function setStatus(text){
-  document.getElementById("statusPill").textContent = text;
-}
+  return m ? new Date(Date.UTC(m[3], m[2]-1, m[1])) : null;
+};
+const fmtDate = d => `${pad(d.getUTCDate())}.${pad(d.getUTCMonth()+1)}`;
+const sumObj = o => Object.values(o||{}).reduce((a,b)=>a+(Number(b)||0),0);
 
-/* ============ LIST FILES ============ */
-async function tryFetchIndexJson(){
-  // Optional optimization if you later generate it via Action:
-  // data/index.json = ["03.01.2026.json", "04.01.2026.json", ...]
-  const url = `${DATA_DIR}/index.json?ts=${Date.now()}`;
-  const r = await fetch(url, { cache:"no-store" });
-  if(!r.ok) return null;
-  const arr = await r.json();
-  if(!Array.isArray(arr)) return null;
-  return arr.filter(x => typeof x === "string");
-}
+/* ================= VERİ ÇEKME MANTIĞI ================= */
+async function getFileList() {
+  // 1. Önce index.json dene
+  try {
+    const r = await fetch(`${CONFIG.dataDir}/index.json?_=${Date.now()}`);
+    if(r.ok) return await r.json();
+  } catch(e){}
 
-function guessGithubRepoFromPages(){
-  // If hosted on GitHub Pages:
-  // https://<user>.github.io/<repo>/...
-  const host = location.hostname;
-  const path = location.pathname.replace(/^\/+/, "");
-  if(!host.endsWith("github.io")) return null;
-  const user = host.split(".")[0];
-  const seg = path.split("/").filter(Boolean);
-  const repo = seg.length ? seg[0] : null; // user.github.io root-site => repo might be user.github.io
-  if(!user || !repo) return null;
-  return { user, repo };
-}
+  // 2. Github API fallback
+  const path = location.pathname.replace(/^\/+/, ""); 
+  const [user, repo] = location.hostname.endsWith("github.io") 
+    ? [location.hostname.split(".")[0], path.split("/")[0] || location.hostname.split(".")[0]] 
+    : [null, null];
 
-async function listFilesViaGithubAPI(){
-  const info = guessGithubRepoFromPages();
-  if(!info) return null;
-
-  // Use GitHub REST API (rate-limited but OK for light use)
-  // NOTE: branch default is usually main, but API works without specifying ref for default branch.
-  const api = `https://api.github.com/repos/${info.user}/${info.repo}/contents/${DATA_DIR}?per_page=200`;
-  const r = await fetch(api, { headers: { "Accept":"application/vnd.github+json" }});
-  if(!r.ok) return null;
-
-  const items = await r.json();
-  if(!Array.isArray(items)) return null;
-
-  return items
-    .filter(it => it && it.type === "file" && typeof it.name === "string")
-    .map(it => it.name)
-    .filter(name => /^\d{2}\.\d{2}\.\d{4}\.json$/.test(name));
-}
-
-async function listDataFiles(){
-  // 1) Prefer index.json if exists
-  const idx = await tryFetchIndexJson();
-  if(idx && idx.length) return idx;
-
-  // 2) Fallback: GitHub API listing (best for GitHub Pages)
-  const apiList = await listFilesViaGithubAPI();
-  if(apiList && apiList.length) return apiList;
-
-  // 3) If none worked, fail with helpful message
-  throw new Error(
-    "Dosya listesi alınamadı.\n\n" +
-    "Çözüm önerileri:\n" +
-    "1) GitHub Pages üzerinde çalıştırıyorsan repo public olmalı (veya API rate limitine takılmamalı).\n" +
-    "2) En sağlam yöntem: Action ile data/index.json üretmek.\n" +
-    "   (İstersen workflow'ına 1 adım ekleyip index.json'u da her gün otomatik yazdırırız.)"
-  );
-}
-
-/* ============ LOAD & NORMALIZE DATA ============ */
-async function loadAllSnapshots(){
-  const files = await listDataFiles();
-
-  const minDt = parseDDMMYYYY(MIN_DATE);
-  const rows = [];
-
-  // Filter+sort by date from filename
-  const dated = files
-    .map(name => ({ name, d: parseDDMMYYYY(fileDateFromName(name) || "") }))
-    .filter(x => x.d && (!minDt || x.d >= minDt))
-    .sort((a,b) => a.d - b.d);
-
-  for(const f of dated){
-    const url = `${DATA_DIR}/${f.name}?ts=${Date.now()}`;
-    const r = await fetch(url, { cache:"no-store" });
-    if(!r.ok) continue;
-    const j = await r.json();
-
-    // total from tickets list (more explicit)
-    let total = 0;
-    if(Array.isArray(j.tickets)){
-      total = j.tickets.reduce((acc, t) => acc + (Number(t.stock)||0), 0);
-    } else if (j.by_parkur && typeof j.by_parkur === "object"){
-      // fallback
-      total = Object.values(j.by_parkur).reduce((acc, m) => acc + sumObjectValues(m||{}), 0);
+  if(user && repo){
+    const api = `https://api.github.com/repos/${user}/${repo}/contents/${CONFIG.dataDir}`;
+    const r = await fetch(api);
+    if(r.ok) {
+      const items = await r.json();
+      return items.filter(x=>x.name.match(/^\d{2}\.\d{2}\.\d{4}\.json$/)).map(x=>x.name);
     }
+  }
+  
+  throw new Error("Veri dosyaları listelenemedi. (data/index.json eksik olabilir)");
+}
 
-    // parkur totals
+async function loadData() {
+  const files = await getFileList();
+  const minDt = parseDate(CONFIG.minDate);
+  
+  // Tarihe göre sırala
+  const sortedFiles = files
+    .map(f => ({ name: f, date: parseDate(f.replace(".json","")) }))
+    .filter(x => x.date && x.date >= minDt)
+    .sort((a,b) => a.date - b.date);
+
+  const rows = [];
+  
+  for(const f of sortedFiles){
+    const res = await fetch(`${CONFIG.dataDir}/${f.name}`);
+    if(!res.ok) continue;
+    const json = await res.json();
+    
+    // Parkur toplamlarını hesapla
     const parkurTotals = {};
-    if(j.by_parkur && typeof j.by_parkur === "object"){
-      for(const [parkur, ticketMap] of Object.entries(j.by_parkur)){
-        parkurTotals[parkur] = sumObjectValues(ticketMap || {});
+    if(json.by_parkur) {
+      for(const [pName, tMap] of Object.entries(json.by_parkur)) {
+        parkurTotals[pName] = sumObj(tMap);
       }
     }
+    
+    // Toplam stok
+    const total = sumObj(parkurTotals);
 
     rows.push({
-      date: f.d,
-      dateStr: fmtDate(f.d),
+      date: f.date,
+      dateStr: fmtDate(f.date),
       total,
       parkurTotals
     });
   }
-
-  if(!rows.length) throw new Error("Uygun snapshot bulunamadı (data klasörünü ve dosya isimlerini kontrol et).");
   return rows;
 }
 
-/* ============ CHART ============ */
-let chart = null;
+/* ================= GRAFİK OLUŞTURMA ================= */
+let charts = {};
 
-function makeGradient(ctx, area, accent){
-  const g = ctx.createLinearGradient(0, area.top, 0, area.bottom);
-  // keep colors subtle (no hard-coded chart colors beyond accent)
-  // We use accent in alpha form (via rgba).
-  // accent is "neon" or "neon2" chosen below.
-  const rgb = accent === "neon2" ? "0,217,255" : "0,255,74";
-  g.addColorStop(0, `rgba(${rgb},0.22)`);
-  g.addColorStop(1, `rgba(${rgb},0.00)`);
-  return g;
-}
+function initDashboard(rows) {
+  const latest = rows[rows.length - 1];
+  
+  // 1. KPI Kartlarını Güncelle
+  document.getElementById("lastUpdateBadge").textContent = `Son Güncelleme: ${latest.dateStr}`;
+  document.getElementById("valTotal").textContent = latest.total.toLocaleString();
+  document.getElementById("valDays").textContent = rows.length;
 
-function buildTotalDataset(rows){
-  return [{
-    label: "Total remaining",
-    data: rows.map(r => ({ x: r.date, y: r.total })),
-    tension: 0.25,
-    borderWidth: 2,
-    pointRadius: 0,
-    fill: true,
-    // colors will be set after chart area exists (scriptable)
-    borderColor: (ctx) => "rgba(0,255,74,0.95)",
-    backgroundColor: (ctx) => {
-      const {chart} = ctx;
-      const {ctx: c, chartArea} = chart;
-      if(!chartArea) return "rgba(0,255,74,0.10)";
-      return makeGradient(c, chartArea, "neon");
+  // En çok stok olanı bul
+  const sortedParkurs = Object.entries(latest.parkurTotals)
+    .sort((a,b) => b[1] - a[1]);
+  
+  document.getElementById("valTopCat").textContent = sortedParkurs[0] ? sortedParkurs[0][0] : "-";
+
+  // 2. Bar Chart (GÜNCEL DURUM)
+  const ctxBar = document.getElementById("barChart").getContext("2d");
+  
+  // Renk mantığı: Stok az (<50) ise Kırmızı, Orta ise Sarı, Çok ise Yeşil
+  const barColors = sortedParkurs.map(x => {
+    const val = x[1];
+    if(val < 20) return "#ef4444"; // Kırmızı
+    if(val < 100) return "#f59e0b"; // Turuncu
+    return "#10b981"; // Yeşil
+  });
+
+  charts.bar = new Chart(ctxBar, {
+    type: 'bar',
+    data: {
+      labels: sortedParkurs.map(x => x[0]),
+      datasets: [{
+        label: 'Kalan Bilet',
+        data: sortedParkurs.map(x => x[1]),
+        backgroundColor: barColors,
+        borderRadius: 4,
+        barPercentage: 0.6
+      }]
+    },
+    options: {
+      indexAxis: 'y', // Yatay bar chart okuması daha kolaydır
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { grid: { color: '#2d3139' }, ticks: { color: '#9ca3af' } },
+        y: { grid: { display: false }, ticks: { color: '#ffffff', font: {size: 11} } }
+      }
     }
-  }];
-}
+  });
 
-function topParkurs(rows, topN=6){
-  // compute total sum over all days to rank
-  const sums = {};
-  for(const r of rows){
-    for(const [p,v] of Object.entries(r.parkurTotals || {})){
-      sums[p] = (sums[p] || 0) + (Number(v)||0);
-    }
-  }
-  return Object.entries(sums)
-    .sort((a,b)=> b[1]-a[1])
-    .slice(0, topN)
-    .map(x=>x[0]);
-}
-
-function buildByParkurDatasets(rows){
-  const top = topParkurs(rows, 6);
-  const othersLabel = "Others";
-  const labels = [...top, othersLabel];
-
-  const palette = [
-    "0,255,74",   // neon green
-    "0,217,255",  // neon cyan
-    "255,255,255",
-    "180,190,200",
-    "255,59,107",
-    "160,90,255",
-    "255,180,0"
-  ];
-
-  return labels.map((p, idx) => {
-    const rgb = palette[idx % palette.length];
+  // 3. Line Chart (TREND)
+  const ctxLine = document.getElementById("lineChart").getContext("2d");
+  
+  // Sadece Top 5 Parkur + Diğerleri
+  const top5Names = sortedParkurs.slice(0,5).map(x=>x[0]);
+  
+  const datasets = top5Names.map((pName, i) => {
+    // Renk paleti
+    const colors = ["#ffcc00", "#3b82f6", "#ef4444", "#10b981", "#a855f7"];
     return {
-      label: p,
-      data: rows.map(r => {
-        let y = 0;
-        if(p === othersLabel){
-          for(const [k,v] of Object.entries(r.parkurTotals || {})){
-            if(!top.includes(k)) y += (Number(v)||0);
-          }
-        } else {
-          y = Number((r.parkurTotals || {})[p] || 0);
-        }
-        return { x: r.date, y };
-      }),
-      tension: 0.25,
+      label: pName,
+      data: rows.map(r => ({ x: r.date, y: (r.parkurTotals[pName] || 0) })),
+      borderColor: colors[i % colors.length],
       borderWidth: 2,
+      tension: 0.3,
       pointRadius: 0,
-      fill: false,
-      borderColor: `rgba(${rgb},0.95)`
+      pointHoverRadius: 6
     };
   });
-}
 
-function makeChart(rows, mode="total"){
-  const el = document.getElementById("chart");
-  const ctx = el.getContext("2d");
-
-  const datasets = (mode === "byParkur")
-    ? buildByParkurDatasets(rows)
-    : buildTotalDataset(rows);
-
-  if(chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: "line",
+  charts.line = new Chart(ctxLine, {
+    type: 'line',
     data: { datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      parsing: false,
-      interaction: { mode: "index", intersect: false },
+      interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: {
-          display: true,
-          labels: {
-            color: "rgba(232,237,242,0.85)",
-            boxWidth: 12,
-            boxHeight: 12
-          }
-        },
-        tooltip: {
-          backgroundColor: "rgba(10,14,18,0.92)",
-          borderColor: "rgba(255,255,255,0.12)",
-          borderWidth: 1,
-          titleColor: "rgba(232,237,242,0.95)",
-          bodyColor: "rgba(232,237,242,0.90)",
-          displayColors: true,
-          callbacks: {
-            title: (items) => items?.[0]?.raw?.x ? fmtDate(new Date(items[0].raw.x)) : "",
-            label: (item) => `${item.dataset.label}: ${Math.round(item.raw.y)}`
-          }
-        },
-        zoom: {
-          pan: { enabled: true, mode: "x", modifierKey: "shift" },
-          zoom: {
-            wheel: { enabled: true },
-            pinch: { enabled: true },
-            mode: "x"
-          }
+        legend: { labels: { color: '#9ca3af', boxWidth: 10 } },
+        tooltip: { 
+            backgroundColor: '#181b21', 
+            titleColor: '#fff', 
+            borderColor: '#2d3139', 
+            borderWidth: 1 
         }
       },
       scales: {
         x: {
-          type: "time",
-          time: { unit: "day" },
-          grid: { color: "rgba(255,255,255,0.06)" },
-          ticks: {
-            color: "rgba(154,166,178,0.90)",
-            maxRotation: 0,
-            autoSkip: true
-          }
+          type: 'time',
+          time: { unit: 'day', tooltipFormat: 'dd.MM' },
+          grid: { color: '#2d3139' },
+          ticks: { color: '#9ca3af' }
         },
         y: {
-          beginAtZero: true,
-          grid: { color: "rgba(255,255,255,0.06)" },
-          ticks: { color: "rgba(154,166,178,0.90)" }
+          grid: { color: '#2d3139' },
+          ticks: { color: '#9ca3af' }
         }
       }
     }
   });
 }
 
-function updateHeaderMetrics(rows, mode){
-  const last = rows[rows.length - 1];
-  const metricLabel = document.getElementById("metricLabel");
-  const metricValue = document.getElementById("metricValue");
-  if(mode === "byParkur"){
-    metricLabel.textContent = "Latest totals (sum)";
-    metricValue.textContent = last.total;
-  } else {
-    metricLabel.textContent = "Latest total remaining";
-    metricValue.textContent = last.total;
-  }
-
-  document.getElementById("footerLeft").textContent =
-    `Range: ${rows[0].dateStr} → ${rows[rows.length - 1].dateStr} • Days: ${rows.length}`;
-
-  document.getElementById("footerRight").innerHTML =
-    `Tip: Zoom (wheel), Pan (drag). Pan while holding <b>Shift</b>.`;
-}
-
-/* ============ RUN ============ */
-(async function init(){
-  try{
-    setStatus("Loading snapshots…");
-    const rows = await loadAllSnapshots();
-
-    setStatus(`${rows.length} snapshots`);
-    makeChart(rows, "total");
-    updateHeaderMetrics(rows, "total");
-
-    const btnTotal = document.getElementById("btnTotal");
-    const btnBy   = document.getElementById("btnByParkur");
-    const btnReset= document.getElementById("btnReset");
-
-    btnTotal.addEventListener("click", () => {
-      btnTotal.classList.add("active");
-      btnBy.classList.remove("active");
-      makeChart(rows, "total");
-      updateHeaderMetrics(rows, "total");
-    });
-
-    btnBy.addEventListener("click", () => {
-      btnBy.classList.add("active");
-      btnTotal.classList.remove("active");
-      makeChart(rows, "byParkur");
-      updateHeaderMetrics(rows, "byParkur");
-    });
-
-    btnReset.addEventListener("click", () => {
-      if(chart){
-        chart.resetZoom();
-      }
-    });
-
-  } catch(err){
-    setStatus("Error");
-    showError(String(err?.message || err));
+/* ================= BAŞLAT ================= */
+(async () => {
+  try {
+    const rows = await loadData();
+    if(!rows.length) throw new Error("Veri bulunamadı.");
+    initDashboard(rows);
+  } catch (err) {
+    const box = document.getElementById("errorBox");
+    box.classList.remove("hidden");
+    box.textContent = "Hata: " + err.message;
+    document.getElementById("lastUpdateBadge").textContent = "Hata";
     console.error(err);
   }
 })();
 </script>
-
-<!-- Chart.js time scale needs an adapter. Use Luxon adapter (simple CDN). -->
-<script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
-
 </body>
 </html>
