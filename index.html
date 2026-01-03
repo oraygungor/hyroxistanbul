@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>Hyrox Analiz (Final)</title>
+  <title>Hyrox Analiz (2025-2026)</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -111,7 +111,10 @@
 
 <script>
 /* --- CONFIG --- */
-const CONFIG = { dataDir: "data", startDate: "01.12.2025" };
+const CONFIG = { 
+  dataDir: "data", 
+  startDate: "01.12.2025" // <--- BURASI DEĞİŞTİ
+};
 
 let HISTORY = [];
 let FILTER = 'ALL';
@@ -126,13 +129,16 @@ const shortDate = s => s.substring(0, 5);
 /* --- CORE --- */
 async function loadAllData() {
   const start = strToDate(CONFIG.startDate);
-  const now = new Date();
+  const now = new Date(); // Bilgisayarın bugünkü tarihi
   const validData = [];
   
   let curr = start;
   let safety = 0;
   
-  while(curr <= new Date(now.getTime() + 86400000) && safety < 60) {
+  // Safety limitini 60'tan 500'e çıkardık.
+  // Bu sayede 1 yıldan fazla süreyi tarayabilir.
+  // Döngü "Bugün" tarihine kadar çalışır.
+  while(curr <= new Date(now.getTime() + 86400000) && safety < 500) {
     const dStr = dateToStr(curr);
     try {
       const res = await fetch(`${CONFIG.dataDir}/${dStr}.json?t=${Date.now()}`);
@@ -147,29 +153,25 @@ async function loadAllData() {
         }
       }
     } catch(e) {}
+    
+    // Bir sonraki güne geç
     curr.setDate(curr.getDate() + 1);
     safety++;
   }
 
-  if(!validData.length) throw new Error("Veri bulunamadı. data/GG.AA.YYYY.json dosyaları eksik.");
+  if(!validData.length) throw new Error("Veri bulunamadı. Lütfen data/ klasöründe " + CONFIG.startDate + " tarihinden sonraki dosyaları kontrol et.");
   HISTORY = validData.sort((a,b) => a.timestamp - b.timestamp);
   
   document.getElementById("dbStatus").textContent = 
-    `Veri: ${HISTORY[0].date} - ${HISTORY[HISTORY.length-1].date}`;
+    `Veri Aralığı: ${HISTORY[0].date} - ${HISTORY[HISTORY.length-1].date}`;
 }
 
 function processTickets(list) {
-  // Adaptive temizliği
   const filteredList = list.filter(t => !t.ticket.toUpperCase().includes("ADAPTIVE"));
 
   return filteredList.map(t => {
     let tags = [];
     const n = t.ticket.toUpperCase();
-    
-    // YENİ MANTIK:
-    // 1. Eğer ismin içinde DOUBLES geçiyorsa (Mixed dahil) -> DOUBLES tag'i al.
-    // 2. Yoksa, WOMEN ise -> WOMEN
-    // 3. Yoksa, MEN ise -> MEN
     
     if (n.includes("DOUBLES")) {
         tags.push("DOUBLES");
@@ -179,9 +181,7 @@ function processTickets(list) {
         tags.push("MEN");
     }
     
-    // GÜN İSİMLERİ KALSIN DİYE SADECE BAŞTAKİ "HYROX " KISMINI SİLİYORUZ
     let cleanName = t.ticket.replace("HYROX ", "");
-
     return { id: t.ticket, name: cleanName, stock: t.stock, tags };
   });
 }
@@ -212,9 +212,8 @@ function updateHistoryChart() {
 
   if(FILTER === 'ALL') {
     modeLabel.textContent = "Kategori Toplamları";
-    // Mixed artık DOUBLES içinde olduğu için buraya eklemeye gerek yok
     const groups = ['MEN', 'WOMEN', 'DOUBLES'];
-    const colors = ['#3b82f6', '#ec4899', '#fbbf24']; // Mavi, Pembe, Sarı
+    const colors = ['#3b82f6', '#ec4899', '#fbbf24']; 
     
     datasets = groups.map((g, i) => {
       return {
