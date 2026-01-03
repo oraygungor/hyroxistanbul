@@ -27,6 +27,25 @@
 
     .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
 
+    /* LOADER STYLES (YENİ) */
+    #loader {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 60vh;
+      text-align: center;
+    }
+    .spinner {
+      width: 50px; height: 50px;
+      border: 4px solid rgba(255,255,255,0.1);
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    /* İçerik başlangıçta gizli olacak */
+    .hidden { display: none !important; }
+
     /* FILTERS */
     .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: var(--card); padding: 10px; border-radius: 8px; border:1px solid var(--border); }
     .btn {
@@ -59,50 +78,60 @@
 
 <header>
   <div class="brand">HYROX <span>PRO</span></div>
-  <div class="status" id="dbStatus">Veri bekleniyor...</div>
+  <div class="status" id="dbStatus">Bağlanıyor...</div>
 </header>
 
 <div class="container">
 
-  <div class="controls">
-    <button class="btn active" data-key="ALL" onclick="setFilter('ALL')">GENEL ÖZET</button>
-    <button class="btn" data-key="MEN" onclick="setFilter('MEN')">ERKEK (SINGLES)</button>
-    <button class="btn" data-key="WOMEN" onclick="setFilter('WOMEN')">KADIN (SINGLES)</button>
-    <button class="btn" data-key="DOUBLES" onclick="setFilter('DOUBLES')">DOUBLE (HEPSİ)</button>
+  <div id="loader">
+    <div class="spinner"></div>
+    <div style="font-size: 20px; font-weight: 600; margin-bottom: 5px;">Veriler Analiz Ediliyor</div>
+    <div style="color: var(--text-dim); font-size: 14px;">2025-2026 sezonu taranıyor...</div>
   </div>
 
-  <div class="chart-section">
-    <div class="chart-header">
-      <span>📈 Satış Trendi (Zamanla Değişim)</span>
-      <span style="font-size:12px; color:var(--text-dim); font-weight:400;">Grafik: <span id="chartModeLabel">Genel</span></span>
+  <div id="dashboardContent" class="hidden">
+    
+    <div class="controls">
+      <button class="btn active" data-key="ALL" onclick="setFilter('ALL')">GENEL ÖZET</button>
+      <button class="btn" data-key="MEN" onclick="setFilter('MEN')">ERKEK (SINGLES)</button>
+      <button class="btn" data-key="WOMEN" onclick="setFilter('WOMEN')">KADIN (SINGLES)</button>
+      <button class="btn" data-key="DOUBLES" onclick="setFilter('DOUBLES')">DOUBLE (HEPSİ)</button>
     </div>
-    <div class="chart-box">
-      <canvas id="chartHistory"></canvas>
-    </div>
-  </div>
 
-  <div class="chart-section">
-    <div class="chart-header">📊 Güncel Stok Adetleri</div>
-    <div class="chart-box">
-      <canvas id="chartCurrent"></canvas>
+    <div class="chart-section">
+      <div class="chart-header">
+        <span>📈 Satış Trendi (Zamanla Değişim)</span>
+        <span style="font-size:12px; color:var(--text-dim); font-weight:400;">Grafik: <span id="chartModeLabel">Genel</span></span>
+      </div>
+      <div class="chart-box">
+        <canvas id="chartHistory"></canvas>
+      </div>
     </div>
-  </div>
 
-  <div class="chart-section">
-    <div class="chart-header">📋 Detaylı Değişim Raporu (Son 2 Veri)</div>
-    <div class="table-container">
-      <table id="diffTable">
-        <thead>
-          <tr>
-            <th>Bilet Tipi</th>
-            <th>Önceki</th>
-            <th>Güncel</th>
-            <th>Fark</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <div class="chart-section">
+      <div class="chart-header">📊 Güncel Stok Adetleri</div>
+      <div class="chart-box">
+        <canvas id="chartCurrent"></canvas>
+      </div>
     </div>
+
+    <div class="chart-section">
+      <div class="chart-header">📋 Detaylı Değişim Raporu (Son 2 Veri)</div>
+      <div class="table-container">
+        <table id="diffTable">
+          <thead>
+            <tr>
+              <th>Bilet Tipi</th>
+              <th>Önceki</th>
+              <th>Güncel</th>
+              <th>Fark</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
   <div id="errorLog"></div>
@@ -113,7 +142,7 @@
 /* --- CONFIG --- */
 const CONFIG = { 
   dataDir: "data", 
-  startDate: "01.12.2025" // <--- BURASI DEĞİŞTİ
+  startDate: "01.12.2025"
 };
 
 let HISTORY = [];
@@ -129,15 +158,12 @@ const shortDate = s => s.substring(0, 5);
 /* --- CORE --- */
 async function loadAllData() {
   const start = strToDate(CONFIG.startDate);
-  const now = new Date(); // Bilgisayarın bugünkü tarihi
+  const now = new Date(); 
   const validData = [];
   
   let curr = start;
   let safety = 0;
   
-  // Safety limitini 60'tan 500'e çıkardık.
-  // Bu sayede 1 yıldan fazla süreyi tarayabilir.
-  // Döngü "Bugün" tarihine kadar çalışır.
   while(curr <= new Date(now.getTime() + 86400000) && safety < 500) {
     const dStr = dateToStr(curr);
     try {
@@ -154,12 +180,11 @@ async function loadAllData() {
       }
     } catch(e) {}
     
-    // Bir sonraki güne geç
     curr.setDate(curr.getDate() + 1);
     safety++;
   }
 
-  if(!validData.length) throw new Error("Veri bulunamadı. Lütfen data/ klasöründe " + CONFIG.startDate + " tarihinden sonraki dosyaları kontrol et.");
+  if(!validData.length) throw new Error("Veri bulunamadı. Lütfen data/ klasörünü kontrol et.");
   HISTORY = validData.sort((a,b) => a.timestamp - b.timestamp);
   
   document.getElementById("dbStatus").textContent = 
@@ -189,15 +214,10 @@ function processTickets(list) {
 /* --- UI ACTIONS --- */
 window.setFilter = (f) => {
   FILTER = f;
-  
   document.querySelectorAll(".btn").forEach(b => {
-    if (b.getAttribute('data-key') === f) {
-      b.classList.add("active");
-    } else {
-      b.classList.remove("active");
-    }
+    if (b.getAttribute('data-key') === f) b.classList.add("active");
+    else b.classList.remove("active");
   });
-
   updateHistoryChart();
   updateCurrentChart();
   updateTable();
@@ -226,7 +246,6 @@ function updateHistoryChart() {
         tension: 0.3, borderWidth: 2
       };
     });
-
   } else {
     modeLabel.textContent = FILTER + " Detayları";
     const ticketNames = new Set();
@@ -236,13 +255,11 @@ function updateHistoryChart() {
 
     const palette = ['#fbbf24', '#3b82f6', '#ef4444', '#10b981', '#f97316', '#8b5cf6'];
     let colorIdx = 0;
-
     ticketNames.forEach(name => {
       const dataPoints = HISTORY.map(day => {
         const found = day.tickets.find(t => t.name === name);
         return found ? found.stock : null;
       });
-
       if(dataPoints.some(x => x !== null)) {
         datasets.push({
           label: name,
@@ -255,7 +272,6 @@ function updateHistoryChart() {
       }
     });
   }
-
   if(charts.history) charts.history.destroy();
   charts.history = new Chart(ctx, {
     type: 'line',
@@ -265,9 +281,7 @@ function updateHistoryChart() {
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { labels: { color: '#9ca3af' } },
-        tooltip: { 
-          backgroundColor: '#161920', titleColor: '#fff', bodyColor:'#ddd', borderColor:'#333', borderWidth:1
-        }
+        tooltip: { backgroundColor: '#161920', titleColor: '#fff', bodyColor:'#ddd', borderColor:'#333', borderWidth:1 }
       },
       scales: {
         x: { grid: { color: '#2a2f3a' }, ticks: { color: '#9ca3af' } },
@@ -280,10 +294,8 @@ function updateHistoryChart() {
 function updateCurrentChart() {
   const ctx = document.getElementById("chartCurrent").getContext("2d");
   const latest = HISTORY[HISTORY.length - 1];
-  
   let data = latest.tickets;
   if(FILTER !== 'ALL') data = data.filter(t => t.tags.includes(FILTER));
-  
   data.sort((a,b) => b.stock - a.stock);
 
   if(charts.current) charts.current.destroy();
@@ -313,44 +325,41 @@ function updateTable() {
   const tbody = document.querySelector("#diffTable tbody");
   tbody.innerHTML = "";
   if(HISTORY.length < 1) return;
-
   const currentDay = HISTORY[HISTORY.length - 1];
   const prevDay = HISTORY.length > 1 ? HISTORY[HISTORY.length - 2] : null;
-
   let items = currentDay.tickets;
   if(FILTER !== 'ALL') items = items.filter(t => t.tags.includes(FILTER));
-
   items.sort((a,b) => b.stock - a.stock);
-
   items.forEach(curr => {
     let prevStock = "-";
     let diff = 0;
-    
     if(prevDay) {
       const p = prevDay.tickets.find(x => x.name === curr.name);
       if(p) { prevStock = p.stock; diff = curr.stock - p.stock; }
     }
-
     const tr = document.createElement("tr");
     let diffHtml = `<span class="diff-badge diff-neutral">0</span>`;
     if(diff < 0) diffHtml = `<span class="diff-badge diff-neg">🔻 ${Math.abs(diff)}</span>`;
     if(diff > 0) diffHtml = `<span class="diff-badge" style="color:#10b981">⬆️ +${diff}</span>`;
-
-    tr.innerHTML = `
-      <td>${curr.name}</td>
-      <td class="stock-val" style="color:#9ca3af">${prevStock}</td>
-      <td class="stock-val" style="color:#fff">${curr.stock}</td>
-      <td>${diffHtml}</td>
-    `;
+    tr.innerHTML = `<td>${curr.name}</td><td class="stock-val" style="color:#9ca3af">${prevStock}</td><td class="stock-val" style="color:#fff">${curr.stock}</td><td>${diffHtml}</td>`;
     tbody.appendChild(tr);
   });
 }
 
 (async () => {
   try {
+    // 1. Önce verileri yükle (Bu sırada ekranda sadece loader var)
     await loadAllData();
+    
+    // 2. Veriler gelince Loader'ı gizle, İçeriği göster
+    document.getElementById("loader").classList.add("hidden");
+    document.getElementById("dashboardContent").classList.remove("hidden");
+    
+    // 3. Grafikleri çiz
     setFilter('ALL'); 
   } catch(err) {
+    // Hata varsa loader'ı gizle, hatayı göster
+    document.getElementById("loader").classList.add("hidden");
     const el = document.getElementById("errorLog");
     el.style.display = "block";
     el.innerHTML = `<strong>HATA:</strong> ${err.message}`;
