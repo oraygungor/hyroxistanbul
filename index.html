@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>Hyrox Analiz Pro</title>
+  <title>Hyrox Analiz Pro (No-Adaptive)</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
@@ -122,7 +122,7 @@ const CONFIG = {
 };
 
 /* --- GLOBAL DEĞİŞKENLER --- */
-let HISTORY = []; // [{date: '03.01', data: [...]}, ...]
+let HISTORY = [];
 let FILTER = 'ALL';
 let charts = { history: null, current: null };
 
@@ -130,7 +130,7 @@ let charts = { history: null, current: null };
 const pad = n => String(n).padStart(2, "0");
 const strToDate = s => { const [d,m,y] = s.split(".").map(Number); return new Date(y, m-1, d); };
 const dateToStr = d => `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
-const shortDate = s => s.substring(0, 5); // 03.01.2026 -> 03.01
+const shortDate = s => s.substring(0, 5); 
 
 /* --- VERİ ÇEKME MOTORU --- */
 async function loadAllData() {
@@ -138,7 +138,6 @@ async function loadAllData() {
   const now = new Date();
   const validData = [];
   
-  // Bugüne kadar +1 gün dene
   let curr = start;
   let safety = 0;
   
@@ -168,10 +167,16 @@ async function loadAllData() {
     `Veri Aralığı: ${HISTORY[0].date} - ${HISTORY[HISTORY.length-1].date} (${HISTORY.length} gün)`;
 }
 
+// Bilet İşleme ve "ADAPTIVE" Filtreleme
 function processTickets(list) {
-  return list.map(t => {
+  // ADIM 1: "ADAPTIVE" olanları LİSTEDEN AT
+  const filteredList = list.filter(t => !t.ticket.toUpperCase().includes("ADAPTIVE"));
+
+  return filteredList.map(t => {
     let tags = [];
     const n = t.ticket.toUpperCase();
+    
+    // Tag işlemleri (Adaptive artık yok)
     if(n.includes("MEN") && !n.includes("WOMEN")) tags.push("MEN");
     if(n.includes("WOMEN")) tags.push("WOMEN");
     if(n.includes("MIXED")) tags.push("MIXED");
@@ -195,17 +200,12 @@ function updateHistoryChart() {
   const ctx = document.getElementById("chartHistory").getContext("2d");
   const labels = HISTORY.map(h => shortDate(h.date));
   let datasets = [];
-
-  // Mantık: Eğer 'ALL' seçiliyse GRUPLARI göster (Men Total, Women Total).
-  // Eğer Kategori seçiliyse (örn MEN) o kategorideki BİLETLERİ göster.
-  
   const modeLabel = document.getElementById("chartModeLabel");
 
   if(FILTER === 'ALL') {
-    modeLabel.textContent = "Genel Toplamlar (Erkek vs Kadın vs Takım)";
-    // Grupları hazırla
+    modeLabel.textContent = "Genel Toplamlar (Adaptive Hariç)";
     const groups = ['MEN', 'WOMEN', 'DOUBLES', 'MIXED'];
-    const colors = ['#3b82f6', '#ec4899', '#fbbf24', '#a855f7']; // Mavi, Pembe, Sarı, Mor
+    const colors = ['#3b82f6', '#ec4899', '#fbbf24', '#a855f7']; 
     
     datasets = groups.map((g, i) => {
       return {
@@ -220,10 +220,7 @@ function updateHistoryChart() {
     });
 
   } else {
-    // Özel Kategori Modu (Örn: Sadece MEN biletleri)
     modeLabel.textContent = "Detaylı Bilet Takibi";
-    
-    // Tüm günlerdeki bu filtreye uyan bilet isimlerini bul
     const ticketNames = new Set();
     HISTORY.forEach(day => {
       day.tickets.filter(t => t.tags.includes(FILTER)).forEach(t => ticketNames.add(t.name));
@@ -234,12 +231,10 @@ function updateHistoryChart() {
 
     ticketNames.forEach(name => {
       const dataPoints = HISTORY.map(day => {
-        const found = day.tickets.find(t => t.name === name); // İsimden bul (Clean name)
-        // Eğer o gün o bilet tipi yoksa (örn yeni eklendiyse) null döneriz
+        const found = day.tickets.find(t => t.name === name);
         return found ? found.stock : null;
       });
 
-      // Sadece veri varsa ekle
       if(dataPoints.some(x => x !== null)) {
         datasets.push({
           label: name,
@@ -264,9 +259,7 @@ function updateHistoryChart() {
         legend: { labels: { color: '#9ca3af' } },
         tooltip: { 
           backgroundColor: '#161920', titleColor: '#fff', bodyColor:'#ddd', borderColor:'#333', borderWidth:1,
-          callbacks: {
-            label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}`
-          }
+          callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}` }
         }
       },
       scales: {
@@ -324,7 +317,6 @@ function updateTable() {
   let items = currentDay.tickets;
   if(FILTER !== 'ALL') items = items.filter(t => t.tags.includes(FILTER));
 
-  // Adet çoktan aza
   items.sort((a,b) => b.stock - a.stock);
 
   items.forEach(curr => {
@@ -332,7 +324,7 @@ function updateTable() {
     let diff = 0;
     
     if(prevDay) {
-      const p = prevDay.tickets.find(x => x.name === curr.name); // İsim eşleşmesi (Clean name)
+      const p = prevDay.tickets.find(x => x.name === curr.name);
       if(p) {
         prevStock = p.stock;
         diff = curr.stock - p.stock;
@@ -340,10 +332,9 @@ function updateTable() {
     }
 
     const tr = document.createElement("tr");
-    
     let diffHtml = `<span class="diff-badge diff-neutral">0</span>`;
     if(diff < 0) diffHtml = `<span class="diff-badge diff-neg">🔻 ${Math.abs(diff)}</span>`;
-    if(diff > 0) diffHtml = `<span class="diff-badge" style="color:#10b981">⬆️ +${diff}</span>`; // İade vb.
+    if(diff > 0) diffHtml = `<span class="diff-badge" style="color:#10b981">⬆️ +${diff}</span>`;
 
     tr.innerHTML = `
       <td>${curr.name}</td>
@@ -369,7 +360,7 @@ window.setFilter = (f) => {
 (async () => {
   try {
     await loadAllData();
-    setFilter('ALL'); // Başlat
+    setFilter('ALL'); 
   } catch(err) {
     const el = document.getElementById("errorLog");
     el.style.display = "block";
