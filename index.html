@@ -3,395 +3,512 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>Hyrox İstanbul - Bilet Takip</title>
+  <title>Hyrox İstanbul Dashboard</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
 
   <style>
     :root {
-      /* Hyrox Brand Vibes: Black, Dark Greys, Vibrant Yellow/Amber */
-      --bg-body: #0f1115;
-      --bg-card: #181b21;
-      --bg-header: #000000;
+      --bg-dark: #0f1115;
+      --bg-panel: #161920;
+      --bg-hover: #1f232b;
       
+      --hyrox-yellow: #fbbf24; 
       --text-main: #ffffff;
-      --text-muted: #9ca3af;
-      
-      --accent: #ffcc00; /* Hyrox Yellow */
-      --accent-glow: rgba(255, 204, 0, 0.15);
+      --text-dim: #9ca3af;
       
       --danger: #ef4444;
       --success: #10b981;
-      --border: #2d3139;
+      --border: #2a2f3a;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      margin: 0;
-      background-color: var(--bg-body);
+      background-color: var(--bg-dark);
       color: var(--text-main);
       font-family: 'Inter', sans-serif;
-      -webkit-font-smoothing: antialiased;
+      padding-bottom: 40px;
     }
 
-    /* HEADER */
+    /* --- HEADER --- */
     header {
-      background: var(--bg-header);
-      border-bottom: 1px solid var(--border);
-      padding: 20px 24px;
+      background: #000;
+      border-bottom: 2px solid var(--hyrox-yellow);
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-family: 'Teko', sans-serif;
+      font-size: 32px;
+      font-weight: 600;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .logo span { color: var(--hyrox-yellow); }
+    .badge {
+      font-size: 12px;
+      background: #333;
+      padding: 4px 10px;
+      border-radius: 4px;
+      color: var(--text-dim);
+    }
+
+    /* --- LAYOUT --- */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* --- KPI GRIDS (TOTALS) --- */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    
+    .kpi-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: ''; position: absolute; top:0; left:0; width: 4px; height: 100%;
+      background: var(--bg-hover);
+    }
+    .kpi-card.yellow::before { background: var(--hyrox-yellow); }
+    .kpi-card.blue::before { background: #3b82f6; }
+    .kpi-card.pink::before { background: #ec4899; }
+    .kpi-card.purple::before { background: #8b5cf6; }
+
+    .kpi-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+    .kpi-value { font-size: 32px; font-weight: 800; font-family: 'Teko', sans-serif; letter-spacing: 1px; }
+
+    /* --- MAIN CONTENT GRID --- */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 50;
+      margin-bottom: 20px;
     }
-
-    .brand h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: -0.5px;
-      color: var(--text-main);
-    }
-    .brand span { color: var(--accent); }
+    .panel-title { font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 8px; }
     
-    .status-badge {
-      font-size: 12px;
-      background: rgba(255,255,255,0.1);
-      padding: 6px 12px;
-      border-radius: 99px;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    /* LAYOUT */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 30px 20px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 24px;
-    }
-
-    /* KPI CARDS */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: var(--bg-card);
+    /* --- FILTER BUTTONS --- */
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn {
+      background: transparent;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
+      color: var(--text-dim);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { background: var(--bg-hover); color: #fff; }
+    .filter-btn.active {
+      background: var(--hyrox-yellow);
+      color: #000;
+      border-color: var(--hyrox-yellow);
+    }
+
+    /* --- CHART AREA --- */
+    .chart-box {
+      position: relative;
+      height: 400px;
+      width: 100%;
+    }
+    .donut-box {
+      position: relative;
+      height: 250px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* --- TICKET LIST --- */
+    .ticket-list {
+      margin-top: 15px;
       display: flex;
       flex-direction: column;
       gap: 8px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
-      border-color: rgba(255,255,255,0.15);
-    }
-
-    .label { font-size: 13px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-    .value { font-size: 32px; font-weight: 700; color: var(--text-main); line-height: 1; }
-    .value.accent { color: var(--accent); text-shadow: 0 0 20px var(--accent-glow); }
-    
-    /* CHARTS SECTION */
-    .section-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin: 30px 0 15px 0;
+    .ticket-item {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 10px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 6px;
+      border-left: 3px solid transparent;
     }
-    .section-title::before {
-      content:''; display:block; width: 4px; height: 18px; background: var(--accent); border-radius: 2px;
-    }
+    .ticket-item.low { border-left-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+    .ticket-item.safe { border-left-color: var(--success); }
+    .ticket-name { font-size: 14px; font-weight: 500; }
+    .ticket-stock { font-weight: 800; font-family: 'Teko', sans-serif; font-size: 20px; }
 
-    .chart-container {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      position: relative;
-      height: 400px; /* Fixed height for charts */
-    }
-
-    /* UTILS */
-    .hidden { display: none; }
-    .error-box {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid var(--danger);
-      color: #fca5a5;
-      padding: 20px;
-      border-radius: 8px;
-      margin-top: 20px;
-    }
-    
-    @media (max-width: 768px) {
-      .container { padding: 15px; }
-      header { padding: 15px; flex-direction: column; align-items: flex-start; gap: 10px; }
-      .value { font-size: 28px; }
-    }
+    .error-box { padding: 20px; background: #3f1515; color: #ffadad; display: none; margin-top: 20px; border-radius: 8px;}
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="brand">
-      <h1>Hyrox <span>Istanbul</span></h1>
-    </div>
-    <div id="lastUpdateBadge" class="status-badge">Yükleniyor...</div>
-  </header>
+<header>
+  <div class="logo">HYROX <span>ISTANBUL</span></div>
+  <div class="badge" id="dateBadge">Yükleniyor...</div>
+</header>
 
-  <div class="container">
+<div class="container">
+  
+  <div class="kpi-grid">
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Toplam Kalan</div>
+      <div class="kpi-value" id="kpiTotal">-</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Erkek (Toplam)</div>
+      <div class="kpi-value" id="kpiMen">-</div>
+    </div>
+    <div class="kpi-card pink">
+      <div class="kpi-label">Kadın (Toplam)</div>
+      <div class="kpi-value" id="kpiWomen">-</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">Çiftli (Takım)</div>
+      <div class="kpi-value" id="kpiDoubles">-</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Mixed</div>
+      <div class="kpi-value" id="kpiMixed">-</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
     
-    <div class="kpi-grid">
-      <div class="card">
-        <div class="label">Toplam Kalan Bilet</div>
-        <div class="value accent" id="valTotal">—</div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Detaylı Stok Dağılımı</div>
+        <div class="filters">
+          <button class="filter-btn active" onclick="filterChart('ALL')">Tümü</button>
+          <button class="filter-btn" onclick="filterChart('MEN')">Erkek</button>
+          <button class="filter-btn" onclick="filterChart('WOMEN')">Kadın</button>
+          <button class="filter-btn" onclick="filterChart('DOUBLES')">Çiftli</button>
+        </div>
       </div>
-      <div class="card">
-        <div class="label">En Çok Stok Olan Kategori</div>
-        <div class="value" id="valTopCat" style="font-size: 20px; margin-top:6px;">—</div>
-      </div>
-      <div class="card">
-        <div class="label">Takip Edilen Gün Sayısı</div>
-        <div class="value" id="valDays">—</div>
-      </div>
-    </div>
-
-    <div>
-      <div class="section-title">Güncel Stok Durumu (Kategori Bazlı)</div>
-      <div class="chart-container">
+      <div class="chart-box">
         <canvas id="barChart"></canvas>
       </div>
     </div>
 
-    <div>
-      <div class="section-title">Satış Trendi (Zaman Çizelges)</div>
-      <div class="chart-container">
-        <canvas id="lineChart"></canvas>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Kategori Oranı</div>
+      </div>
+      <div class="donut-box">
+        <canvas id="donutChart"></canvas>
+      </div>
+
+      <div style="margin-top:30px; border-top:1px solid var(--border); padding-top:15px;">
+        <div class="panel-title" style="font-size:16px; margin-bottom:10px; color:var(--danger);">
+          ⚠️ Tükenmek Üzere (< 50)
+        </div>
+        <div id="lowStockList" class="ticket-list">
+          </div>
       </div>
     </div>
 
-    <div id="errorBox" class="error-box hidden"></div>
   </div>
 
-<script>
-/* ================= KONFIGÜRASYON ================= */
-const CONFIG = {
-  dataDir: "data",      // JSON dosyalarının olduğu klasör
-  minDate: "03.01.2026" // Başlangıç tarihi
-};
+  <div id="errorBox" class="error-box"></div>
+</div>
 
-/* ================= YARDIMCI FONKSİYONLAR ================= */
-const pad = n => String(n).padStart(2, "0");
+<script>
+// --- AYARLAR ---
+const DATA_DIR = "data";
+const MIN_DATE = "03.01.2026";
+
+// --- GLOBAL DEĞİŞKENLER ---
+let allData = [];
+let latestData = null; // En son json verisi
+let barChart = null;
+let donutChart = null;
+
+// --- YARDIMCI FONKSİYONLAR ---
 const parseDate = s => {
   const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(s);
   return m ? new Date(Date.UTC(m[3], m[2]-1, m[1])) : null;
 };
-const fmtDate = d => `${pad(d.getUTCDate())}.${pad(d.getUTCMonth()+1)}`;
-const sumObj = o => Object.values(o||{}).reduce((a,b)=>a+(Number(b)||0),0);
+const fmtNum = n => n.toLocaleString('tr-TR');
 
-/* ================= VERİ ÇEKME MANTIĞI ================= */
-async function getFileList() {
-  // 1. Önce index.json dene
+// --- VERİ ÇEKME ---
+async function loadLatestData() {
   try {
-    const r = await fetch(`${CONFIG.dataDir}/index.json?_=${Date.now()}`);
-    if(r.ok) return await r.json();
-  } catch(e){}
+    // 1. Dosya listesini bul
+    let files = [];
+    try {
+      const r = await fetch(`${DATA_DIR}/index.json?_=${Date.now()}`);
+      if(r.ok) files = await r.json();
+    } catch(e){}
 
-  // 2. Github API fallback
-  const path = location.pathname.replace(/^\/+/, ""); 
-  const [user, repo] = location.hostname.endsWith("github.io") 
-    ? [location.hostname.split(".")[0], path.split("/")[0] || location.hostname.split(".")[0]] 
-    : [null, null];
-
-  if(user && repo){
-    const api = `https://api.github.com/repos/${user}/${repo}/contents/${CONFIG.dataDir}`;
-    const r = await fetch(api);
-    if(r.ok) {
-      const items = await r.json();
-      return items.filter(x=>x.name.match(/^\d{2}\.\d{2}\.\d{4}\.json$/)).map(x=>x.name);
-    }
-  }
-  
-  throw new Error("Veri dosyaları listelenemedi. (data/index.json eksik olabilir)");
-}
-
-async function loadData() {
-  const files = await getFileList();
-  const minDt = parseDate(CONFIG.minDate);
-  
-  // Tarihe göre sırala
-  const sortedFiles = files
-    .map(f => ({ name: f, date: parseDate(f.replace(".json","")) }))
-    .filter(x => x.date && x.date >= minDt)
-    .sort((a,b) => a.date - b.date);
-
-  const rows = [];
-  
-  for(const f of sortedFiles){
-    const res = await fetch(`${CONFIG.dataDir}/${f.name}`);
-    if(!res.ok) continue;
-    const json = await res.json();
-    
-    // Parkur toplamlarını hesapla
-    const parkurTotals = {};
-    if(json.by_parkur) {
-      for(const [pName, tMap] of Object.entries(json.by_parkur)) {
-        parkurTotals[pName] = sumObj(tMap);
+    if(files.length === 0) {
+      // GitHub API Fallback
+      const path = location.pathname.replace(/^\/+/, ""); 
+      const [user, repo] = location.hostname.endsWith("github.io") ? [location.hostname.split(".")[0], path.split("/")[0]] : [null,null];
+      if(user){
+        const api = `https://api.github.com/repos/${user}/${repo}/contents/${DATA_DIR}`;
+        const r = await fetch(api);
+        if(r.ok) {
+          const items = await r.json();
+          files = items.filter(x=>x.name.endsWith(".json")).map(x=>x.name);
+        }
       }
     }
-    
-    // Toplam stok
-    const total = sumObj(parkurTotals);
 
-    rows.push({
-      date: f.date,
-      dateStr: fmtDate(f.date),
-      total,
-      parkurTotals
-    });
+    if(files.length === 0) throw new Error("Veri dosyası bulunamadı.");
+
+    // 2. En güncel dosyayı bul
+    const minDt = parseDate(MIN_DATE);
+    const sortedFiles = files
+      .map(f => ({ name: f, date: parseDate(f.replace(".json","")) }))
+      .filter(x => x.date && x.date >= minDt)
+      .sort((a,b) => b.date - a.date); // Yeniden eskiye
+
+    if(!sortedFiles.length) throw new Error("Uygun tarihli veri yok.");
+
+    // 3. En son dosyayı oku
+    const lastFile = sortedFiles[0];
+    const res = await fetch(`${DATA_DIR}/${lastFile.name}`);
+    const json = await res.json();
+    
+    // Tarih bilgisini güncelle
+    const d = lastFile.date;
+    document.getElementById("dateBadge").textContent = `Son Veri: ${d.getUTCDate()}.${d.getUTCMonth()+1}.${d.getUTCFullYear()}`;
+
+    return json;
+
+  } catch(err) {
+    document.getElementById("errorBox").style.display = 'block';
+    document.getElementById("errorBox").textContent = err.message;
+    console.error(err);
+    return null;
   }
-  return rows;
 }
 
-/* ================= GRAFİK OLUŞTURMA ================= */
-let charts = {};
-
-function initDashboard(rows) {
-  const latest = rows[rows.length - 1];
+// --- VERİ İŞLEME MANTIĞI (Parsing) ---
+function processTickets(jsonData) {
+  // JSON'daki 'tickets' array'ini kullanıyoruz
+  const tickets = jsonData.tickets || [];
   
-  // 1. KPI Kartlarını Güncelle
-  document.getElementById("lastUpdateBadge").textContent = `Son Güncelleme: ${latest.dateStr}`;
-  document.getElementById("valTotal").textContent = latest.total.toLocaleString();
-  document.getElementById("valDays").textContent = rows.length;
+  // Kategorize edilmiş liste
+  const processed = tickets.map(t => {
+    const name = t.ticket.toUpperCase();
+    const stock = t.stock;
+    
+    // Kategori mantığı (Tagging)
+    let tags = [];
+    if(name.includes("MIXED")) tags.push("MIXED");
+    else if(name.includes("WOMEN")) tags.push("WOMEN"); // 'WOMEN' içinde 'MEN' geçer, o yüzden önce buna bak
+    else if(name.includes("MEN")) tags.push("MEN");
+    
+    if(name.includes("DOUBLES")) tags.push("DOUBLES");
+    if(name.includes("SINGLES") || (!name.includes("DOUBLES") && !name.includes("RELAY"))) tags.push("SINGLES");
+    if(name.includes("PRO")) tags.push("PRO");
+    if(name.includes("ADAPTIVE")) tags.push("ADAPTIVE");
 
-  // En çok stok olanı bul
-  const sortedParkurs = Object.entries(latest.parkurTotals)
-    .sort((a,b) => b[1] - a[1]);
-  
-  document.getElementById("valTopCat").textContent = sortedParkurs[0] ? sortedParkurs[0][0] : "-";
-
-  // 2. Bar Chart (GÜNCEL DURUM)
-  const ctxBar = document.getElementById("barChart").getContext("2d");
-  
-  // Renk mantığı: Stok az (<50) ise Kırmızı, Orta ise Sarı, Çok ise Yeşil
-  const barColors = sortedParkurs.map(x => {
-    const val = x[1];
-    if(val < 20) return "#ef4444"; // Kırmızı
-    if(val < 100) return "#f59e0b"; // Turuncu
-    return "#10b981"; // Yeşil
+    return {
+      rawName: t.ticket,
+      stock: stock,
+      tags: tags
+    };
   });
 
-  charts.bar = new Chart(ctxBar, {
+  return processed;
+}
+
+// --- KPI HESAPLAMA ---
+function calculateKPI(processedData) {
+  let stats = {
+    total: 0,
+    men: 0,
+    women: 0,
+    mixed: 0,
+    doubles: 0
+  };
+
+  processedData.forEach(p => {
+    stats.total += p.stock;
+    if(p.tags.includes("MEN")) stats.men += p.stock;
+    if(p.tags.includes("WOMEN")) stats.women += p.stock;
+    if(p.tags.includes("MIXED")) stats.mixed += p.stock;
+    if(p.tags.includes("DOUBLES")) stats.doubles += p.stock;
+  });
+
+  document.getElementById("kpiTotal").textContent = fmtNum(stats.total);
+  document.getElementById("kpiMen").textContent = fmtNum(stats.men);
+  document.getElementById("kpiWomen").textContent = fmtNum(stats.women);
+  document.getElementById("kpiDoubles").textContent = fmtNum(stats.doubles);
+  document.getElementById("kpiMixed").textContent = fmtNum(stats.mixed);
+
+  return stats; // Donut chart için lazım
+}
+
+// --- GRAFİK OLUŞTURMA (BAR) ---
+function renderBarChart(data, filterType) {
+  const ctx = document.getElementById("barChart").getContext("2d");
+  
+  // Filtreleme
+  let filtered = data;
+  if(filterType !== 'ALL') {
+    filtered = data.filter(item => item.tags.includes(filterType));
+  }
+  
+  // Sıralama (Stok çoktan aza)
+  filtered.sort((a,b) => b.stock - a.stock);
+
+  const labels = filtered.map(x => x.rawName.replace("HYROX ", "").replace(" | Friday", "").replace(" | Saturday", ""));
+  const values = filtered.map(x => x.stock);
+  const colors = values.map(v => v < 50 ? '#ef4444' : (v < 150 ? '#f59e0b' : '#fbbf24'));
+
+  if(barChart) barChart.destroy();
+
+  barChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: sortedParkurs.map(x => x[0]),
+      labels: labels,
       datasets: [{
         label: 'Kalan Bilet',
-        data: sortedParkurs.map(x => x[1]),
-        backgroundColor: barColors,
-        borderRadius: 4,
-        barPercentage: 0.6
+        data: values,
+        backgroundColor: colors,
+        borderRadius: 4
       }]
     },
     options: {
-      indexAxis: 'y', // Yatay bar chart okuması daha kolaydır
       responsive: true,
       maintainAspectRatio: false,
+      indexAxis: 'y', // Yatay bar
       plugins: {
         legend: { display: false }
       },
       scales: {
-        x: { grid: { color: '#2d3139' }, ticks: { color: '#9ca3af' } },
-        y: { grid: { display: false }, ticks: { color: '#ffffff', font: {size: 11} } }
-      }
-    }
-  });
-
-  // 3. Line Chart (TREND)
-  const ctxLine = document.getElementById("lineChart").getContext("2d");
-  
-  // Sadece Top 5 Parkur + Diğerleri
-  const top5Names = sortedParkurs.slice(0,5).map(x=>x[0]);
-  
-  const datasets = top5Names.map((pName, i) => {
-    // Renk paleti
-    const colors = ["#ffcc00", "#3b82f6", "#ef4444", "#10b981", "#a855f7"];
-    return {
-      label: pName,
-      data: rows.map(r => ({ x: r.date, y: (r.parkurTotals[pName] || 0) })),
-      borderColor: colors[i % colors.length],
-      borderWidth: 2,
-      tension: 0.3,
-      pointRadius: 0,
-      pointHoverRadius: 6
-    };
-  });
-
-  charts.line = new Chart(ctxLine, {
-    type: 'line',
-    data: { datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { labels: { color: '#9ca3af', boxWidth: 10 } },
-        tooltip: { 
-            backgroundColor: '#181b21', 
-            titleColor: '#fff', 
-            borderColor: '#2d3139', 
-            borderWidth: 1 
-        }
-      },
-      scales: {
-        x: {
-          type: 'time',
-          time: { unit: 'day', tooltipFormat: 'dd.MM' },
-          grid: { color: '#2d3139' },
-          ticks: { color: '#9ca3af' }
-        },
-        y: {
-          grid: { color: '#2d3139' },
-          ticks: { color: '#9ca3af' }
-        }
+        x: { grid: { color: '#2a2f3a' }, ticks: { color: '#9ca3af' } },
+        y: { grid: { display: false }, ticks: { color: '#fff', font: { size: 11 } } }
       }
     }
   });
 }
 
-/* ================= BAŞLAT ================= */
-(async () => {
-  try {
-    const rows = await loadData();
-    if(!rows.length) throw new Error("Veri bulunamadı.");
-    initDashboard(rows);
-  } catch (err) {
-    const box = document.getElementById("errorBox");
-    box.classList.remove("hidden");
-    box.textContent = "Hata: " + err.message;
-    document.getElementById("lastUpdateBadge").textContent = "Hata";
-    console.error(err);
+// --- GRAFİK OLUŞTURMA (DONUT) ---
+function renderDonutChart(stats) {
+  const ctx = document.getElementById("donutChart").getContext("2d");
+  
+  if(donutChart) donutChart.destroy();
+
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Erkek', 'Kadın', 'Mixed'],
+      datasets: [{
+        data: [stats.men, stats.women, stats.mixed],
+        backgroundColor: ['#3b82f6', '#ec4899', '#9ca3af'],
+        borderWidth: 0,
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { color: '#fff' } }
+      }
+    }
+  });
+}
+
+// --- DÜŞÜK STOK LİSTESİ ---
+function renderLowStock(data) {
+  const listEl = document.getElementById("lowStockList");
+  listEl.innerHTML = "";
+  
+  const lowItems = data.filter(x => x.stock < 50).sort((a,b) => a.stock - b.stock);
+  
+  if(lowItems.length === 0) {
+    listEl.innerHTML = "<div style='color:#666; font-style:italic;'>Kritik seviyede bilet yok.</div>";
+    return;
   }
-})();
+
+  lowItems.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "ticket-item low";
+    div.innerHTML = `
+      <div class="ticket-name">${item.rawName}</div>
+      <div class="ticket-stock">${item.stock}</div>
+    `;
+    listEl.appendChild(div);
+  });
+}
+
+// --- MAIN FLOW ---
+let processedDataGlobal = [];
+
+async function init() {
+  const jsonData = await loadLatestData();
+  if(!jsonData) return;
+
+  processedDataGlobal = processTickets(jsonData);
+  
+  // 1. KPI Kartları
+  const stats = calculateKPI(processedDataGlobal);
+  
+  // 2. Grafikler
+  renderBarChart(processedDataGlobal, 'ALL');
+  renderDonutChart(stats);
+  
+  // 3. Liste
+  renderLowStock(processedDataGlobal);
+}
+
+// --- INTERACTION ---
+window.filterChart = (type) => {
+  // Buton stilleri
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  // Grafiği güncelle
+  renderBarChart(processedDataGlobal, type);
+};
+
+init();
+
 </script>
 </body>
 </html>
