@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>Hyrox Analiz Pro (No-Adaptive)</title>
+  <title>Hyrox Analiz (Fixed)</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
@@ -17,7 +17,6 @@
     }
     body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 60px; }
 
-    /* HEADER */
     header {
       background: #000; border-bottom: 2px solid var(--accent); padding: 15px 20px;
       display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50;
@@ -28,32 +27,31 @@
 
     .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
 
-    /* FILTERS */
+    /* FILTERS - Düzeltildi */
     .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: var(--card); padding: 10px; border-radius: 8px; border:1px solid var(--border); }
     .btn {
       flex: 1; background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 10px; border-radius: 6px;
       cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; white-space: nowrap;
     }
     .btn:hover { background: #222; color: #fff; }
-    .btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+    
+    /* Active state için sadece .active class'ı yeterli */
+    .btn.active { background: var(--accent); color: #000; border-color: var(--accent); opacity: 1; }
 
-    /* CHARTS */
     .chart-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
     .chart-header { font-size: 16px; font-weight: 700; margin-bottom: 15px; display: flex; justify-content: space-between; }
     .chart-box { position: relative; height: 350px; width: 100%; }
 
-    /* DATA TABLE */
+    /* TABLE */
     .table-container { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th { text-align: left; color: var(--text-dim); padding: 10px; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 11px; }
     td { padding: 12px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
     tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255,255,255,0.02); }
     
     .diff-badge { padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; }
     .diff-neg { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
     .diff-neutral { color: var(--text-dim); opacity: 0.5; }
-    
     .stock-val { font-family: 'Teko', sans-serif; font-size: 18px; letter-spacing: 0.5px; }
 
     #errorLog { display:none; background: #3f1515; color: #ffadad; padding: 15px; border-radius: 8px; margin-top: 20px; }
@@ -69,17 +67,17 @@
 <div class="container">
 
   <div class="controls">
-    <button class="btn active" onclick="setFilter('ALL')">GENEL ÖZET</button>
-    <button class="btn" onclick="setFilter('MEN')">ERKEK (MEN)</button>
-    <button class="btn" onclick="setFilter('WOMEN')">KADIN (WOMEN)</button>
-    <button class="btn" onclick="setFilter('DOUBLES')">ÇİFTLİ (DOUBLES)</button>
-    <button class="btn" onclick="setFilter('MIXED')">MIXED</button>
+    <button class="btn active" data-key="ALL" onclick="setFilter('ALL')">GENEL ÖZET</button>
+    <button class="btn" data-key="MEN" onclick="setFilter('MEN')">ERKEK</button>
+    <button class="btn" data-key="WOMEN" onclick="setFilter('WOMEN')">KADIN</button>
+    <button class="btn" data-key="DOUBLES" onclick="setFilter('DOUBLES')">ÇİFTLİ</button>
+    <button class="btn" data-key="MIXED" onclick="setFilter('MIXED')">MIXED</button>
   </div>
 
   <div class="chart-section">
     <div class="chart-header">
       <span>📈 Satış Trendi (Zamanla Değişim)</span>
-      <span style="font-size:12px; color:var(--text-dim); font-weight:400;">Grafik: <span id="chartModeLabel">Kategori Özeti</span></span>
+      <span style="font-size:12px; color:var(--text-dim); font-weight:400;">Grafik: <span id="chartModeLabel">Genel</span></span>
     </div>
     <div class="chart-box">
       <canvas id="chartHistory"></canvas>
@@ -100,9 +98,9 @@
         <thead>
           <tr>
             <th>Bilet Tipi</th>
-            <th>Önceki Stok</th>
-            <th>Güncel Stok</th>
-            <th>Fark (Satış)</th>
+            <th>Önceki</th>
+            <th>Güncel</th>
+            <th>Fark</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -115,24 +113,20 @@
 </div>
 
 <script>
-/* --- YAPILANDIRMA --- */
-const CONFIG = {
-  dataDir: "data",
-  startDate: "03.01.2026"
-};
+/* --- CONFIG --- */
+const CONFIG = { dataDir: "data", startDate: "03.01.2026" };
 
-/* --- GLOBAL DEĞİŞKENLER --- */
 let HISTORY = [];
 let FILTER = 'ALL';
 let charts = { history: null, current: null };
 
-/* --- YARDIMCI --- */
+/* --- UTILS --- */
 const pad = n => String(n).padStart(2, "0");
 const strToDate = s => { const [d,m,y] = s.split(".").map(Number); return new Date(y, m-1, d); };
 const dateToStr = d => `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
 const shortDate = s => s.substring(0, 5); 
 
-/* --- VERİ ÇEKME MOTORU --- */
+/* --- CORE --- */
 async function loadAllData() {
   const start = strToDate(CONFIG.startDate);
   const now = new Date();
@@ -160,29 +154,27 @@ async function loadAllData() {
     safety++;
   }
 
-  if(!validData.length) throw new Error("Veri bulunamadı. Lütfen data/GG.AA.YYYY.json dosyalarını kontrol et.");
+  if(!validData.length) throw new Error("Veri bulunamadı. data/GG.AA.YYYY.json dosyaları eksik.");
   HISTORY = validData.sort((a,b) => a.timestamp - b.timestamp);
   
   document.getElementById("dbStatus").textContent = 
-    `Veri Aralığı: ${HISTORY[0].date} - ${HISTORY[HISTORY.length-1].date} (${HISTORY.length} gün)`;
+    `Veri: ${HISTORY[0].date} - ${HISTORY[HISTORY.length-1].date}`;
 }
 
-// Bilet İşleme ve "ADAPTIVE" Filtreleme
 function processTickets(list) {
-  // ADIM 1: "ADAPTIVE" olanları LİSTEDEN AT
+  // Adaptive temizliği
   const filteredList = list.filter(t => !t.ticket.toUpperCase().includes("ADAPTIVE"));
 
   return filteredList.map(t => {
     let tags = [];
     const n = t.ticket.toUpperCase();
     
-    // Tag işlemleri (Adaptive artık yok)
+    // Tag işlemleri (Strict Logic)
     if(n.includes("MEN") && !n.includes("WOMEN")) tags.push("MEN");
     if(n.includes("WOMEN")) tags.push("WOMEN");
     if(n.includes("MIXED")) tags.push("MIXED");
     if(n.includes("DOUBLES")) tags.push("DOUBLES");
     
-    // Temiz isim
     let cleanName = t.ticket
       .replace("HYROX ", "")
       .replace(" | Friday", "")
@@ -193,9 +185,27 @@ function processTickets(list) {
   });
 }
 
-/* --- GRAFİKLER --- */
+/* --- UI ACTIONS --- */
 
-// 1. Tarihçe Grafiği (Line)
+// BUTON SEÇİM MANTIĞI BURADA DÜZELTİLDİ
+window.setFilter = (f) => {
+  FILTER = f;
+  
+  // Tüm butonları gez, data-key özelliği gönderilen f ile BİREBİR aynıysa yak.
+  document.querySelectorAll(".btn").forEach(b => {
+    if (b.getAttribute('data-key') === f) {
+      b.classList.add("active");
+    } else {
+      b.classList.remove("active");
+    }
+  });
+
+  updateHistoryChart();
+  updateCurrentChart();
+  updateTable();
+};
+
+/* --- CHARTS --- */
 function updateHistoryChart() {
   const ctx = document.getElementById("chartHistory").getContext("2d");
   const labels = HISTORY.map(h => shortDate(h.date));
@@ -203,13 +213,13 @@ function updateHistoryChart() {
   const modeLabel = document.getElementById("chartModeLabel");
 
   if(FILTER === 'ALL') {
-    modeLabel.textContent = "Genel Toplamlar (Adaptive Hariç)";
+    modeLabel.textContent = "Özet (Kategori Toplamları)";
     const groups = ['MEN', 'WOMEN', 'DOUBLES', 'MIXED'];
     const colors = ['#3b82f6', '#ec4899', '#fbbf24', '#a855f7']; 
     
     datasets = groups.map((g, i) => {
       return {
-        label: g + " TOPLAM",
+        label: g,
         data: HISTORY.map(day => {
           return day.tickets.filter(t => t.tags.includes(g)).reduce((s, t) => s + t.stock, 0);
         }),
@@ -220,7 +230,7 @@ function updateHistoryChart() {
     });
 
   } else {
-    modeLabel.textContent = "Detaylı Bilet Takibi";
+    modeLabel.textContent = FILTER + " Kategorisi Detayları";
     const ticketNames = new Set();
     HISTORY.forEach(day => {
       day.tickets.filter(t => t.tags.includes(FILTER)).forEach(t => ticketNames.add(t.name));
@@ -258,8 +268,7 @@ function updateHistoryChart() {
       plugins: {
         legend: { labels: { color: '#9ca3af' } },
         tooltip: { 
-          backgroundColor: '#161920', titleColor: '#fff', bodyColor:'#ddd', borderColor:'#333', borderWidth:1,
-          callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}` }
+          backgroundColor: '#161920', titleColor: '#fff', bodyColor:'#ddd', borderColor:'#333', borderWidth:1
         }
       },
       scales: {
@@ -270,7 +279,6 @@ function updateHistoryChart() {
   });
 }
 
-// 2. Güncel Durum (Bar)
 function updateCurrentChart() {
   const ctx = document.getElementById("chartCurrent").getContext("2d");
   const latest = HISTORY[HISTORY.length - 1];
@@ -278,7 +286,6 @@ function updateCurrentChart() {
   let data = latest.tickets;
   if(FILTER !== 'ALL') data = data.filter(t => t.tags.includes(FILTER));
   
-  // Sırala
   data.sort((a,b) => b.stock - a.stock);
 
   if(charts.current) charts.current.destroy();
@@ -287,7 +294,7 @@ function updateCurrentChart() {
     data: {
       labels: data.map(t => t.name),
       datasets: [{
-        label: 'Stok',
+        label: 'Adet',
         data: data.map(t => t.stock),
         backgroundColor: data.map(t => t.stock < 50 ? '#ef4444' : '#10b981'),
         borderRadius: 4
@@ -304,11 +311,9 @@ function updateCurrentChart() {
   });
 }
 
-// 3. Tablo Güncelleme
 function updateTable() {
   const tbody = document.querySelector("#diffTable tbody");
   tbody.innerHTML = "";
-
   if(HISTORY.length < 1) return;
 
   const currentDay = HISTORY[HISTORY.length - 1];
@@ -325,10 +330,7 @@ function updateTable() {
     
     if(prevDay) {
       const p = prevDay.tickets.find(x => x.name === curr.name);
-      if(p) {
-        prevStock = p.stock;
-        diff = curr.stock - p.stock;
-      }
+      if(p) { prevStock = p.stock; diff = curr.stock - p.stock; }
     }
 
     const tr = document.createElement("tr");
@@ -345,17 +347,6 @@ function updateTable() {
     tbody.appendChild(tr);
   });
 }
-
-/* --- INIT --- */
-window.setFilter = (f) => {
-  FILTER = f;
-  document.querySelectorAll(".btn").forEach(b => {
-    b.classList.toggle("active", b.innerText.includes(f === 'ALL' ? 'ÖZET' : f));
-  });
-  updateHistoryChart();
-  updateCurrentChart();
-  updateTable();
-};
 
 (async () => {
   try {
