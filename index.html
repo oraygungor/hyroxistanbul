@@ -3,411 +3,322 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>Hyrox İstanbul Dashboard</title>
+  <title>Hyrox İstanbul Analiz</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
   
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
     :root {
-      --bg-dark: #0f1115;
-      --bg-panel: #161920;
-      --bg-hover: #1f232b;
-      
-      --hyrox-yellow: #fbbf24; 
-      --text-main: #ffffff;
-      --text-dim: #9ca3af;
-      
-      --danger: #ef4444;
-      --success: #10b981;
+      --bg: #0f1115;
+      --bg-card: #161920;
+      --accent: #fbbf24; /* Hyrox Yellow */
+      --text: #ffffff;
+      --text-soft: #9ca3af;
       --border: #2a2f3a;
+      --danger: #ef4444;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
+      background-color: var(--bg);
+      color: var(--text);
       font-family: 'Inter', sans-serif;
-      padding-bottom: 40px;
+      margin: 0;
+      padding-bottom: 50px;
     }
 
-    /* --- HEADER --- */
+    /* HEADER */
     header {
       background: #000;
-      border-bottom: 2px solid var(--hyrox-yellow);
+      border-bottom: 2px solid var(--accent);
       padding: 15px 20px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 50;
     }
-    .logo {
-      font-family: 'Teko', sans-serif;
-      font-size: 32px;
-      font-weight: 600;
-      text-transform: uppercase;
-      line-height: 1;
-    }
-    .logo span { color: var(--hyrox-yellow); }
-    .badge {
-      font-size: 12px;
-      background: #333;
-      padding: 4px 10px;
-      border-radius: 4px;
-      color: var(--text-dim);
-    }
+    .brand { font-family: 'Teko', sans-serif; font-size: 28px; font-weight: 600; text-transform: uppercase; }
+    .brand span { color: var(--accent); }
+    .status { font-size: 12px; color: var(--text-soft); background: #222; padding: 4px 8px; border-radius: 4px; }
 
-    /* --- LAYOUT --- */
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    /* --- KPI GRIDS (TOTALS) --- */
-    .kpi-grid {
+    /* LAYOUT */
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    
+    .grid-top {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 15px;
       margin-bottom: 25px;
     }
-    
-    .kpi-card {
-      background: var(--bg-panel);
+
+    /* KPI CARDS */
+    .card {
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      padding: 20px;
       border-radius: 8px;
+      padding: 15px;
       display: flex;
       flex-direction: column;
-      position: relative;
-      overflow: hidden;
     }
-    .kpi-card::before {
-      content: ''; position: absolute; top:0; left:0; width: 4px; height: 100%;
-      background: var(--bg-hover);
+    .card-label { font-size: 11px; text-transform: uppercase; color: var(--text-soft); letter-spacing: 1px; margin-bottom: 5px; }
+    .card-val { font-family: 'Teko', sans-serif; font-size: 32px; font-weight: 600; line-height: 1; }
+    .c-yellow { color: var(--accent); }
+    .c-blue { color: #3b82f6; }
+    .c-pink { color: #ec4899; }
+    
+    /* FILTERS */
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
-    .kpi-card.yellow::before { background: var(--hyrox-yellow); }
-    .kpi-card.blue::before { background: #3b82f6; }
-    .kpi-card.pink::before { background: #ec4899; }
-    .kpi-card.purple::before { background: #8b5cf6; }
-
-    .kpi-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-    .kpi-value { font-size: 32px; font-weight: 800; font-family: 'Teko', sans-serif; letter-spacing: 1px; }
-
-    /* --- MAIN CONTENT GRID --- */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 20px;
+    .btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-soft);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: 0.2s;
     }
-    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+    .btn:hover { background: #222; color: #fff; }
+    .btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
 
-    .panel {
-      background: var(--bg-panel);
+    /* CHARTS */
+    .chart-section {
+      background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       margin-bottom: 20px;
     }
-    .panel-title { font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 8px; }
-    
-    /* --- FILTER BUTTONS --- */
-    .filters { display: flex; gap: 8px; flex-wrap: wrap; }
-    .filter-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text-dim);
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
+    .chart-header { font-size: 16px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+    .chart-box { position: relative; height: 350px; width: 100%; }
+
+    /* ERROR BOX */
+    #errorLog {
+      display: none;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--danger);
+      color: #fca5a5;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 8px;
       font-size: 13px;
-      font-weight: 600;
-      transition: all 0.2s;
+      white-space: pre-wrap;
     }
-    .filter-btn:hover { background: var(--bg-hover); color: #fff; }
-    .filter-btn.active {
-      background: var(--hyrox-yellow);
-      color: #000;
-      border-color: var(--hyrox-yellow);
-    }
-
-    /* --- CHART AREA --- */
-    .chart-box {
-      position: relative;
-      height: 400px;
-      width: 100%;
-    }
-    .donut-box {
-      position: relative;
-      height: 250px;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
-
-    /* --- TICKET LIST --- */
-    .ticket-list {
-      margin-top: 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .ticket-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      background: rgba(255,255,255,0.03);
-      border-radius: 6px;
-      border-left: 3px solid transparent;
-    }
-    .ticket-item.low { border-left-color: var(--danger); background: rgba(239, 68, 68, 0.1); }
-    .ticket-item.safe { border-left-color: var(--success); }
-    .ticket-name { font-size: 14px; font-weight: 500; }
-    .ticket-stock { font-weight: 800; font-family: 'Teko', sans-serif; font-size: 20px; }
-
-    .error-box { padding: 20px; background: #3f1515; color: #ffadad; display: none; margin-top: 20px; border-radius: 8px;}
   </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">HYROX <span>ISTANBUL</span></div>
-  <div class="badge" id="dateBadge">Yükleniyor...</div>
+  <div class="brand">HYROX <span>ISTANBUL</span></div>
+  <div class="status" id="lastUpdate">Veriler yükleniyor...</div>
 </header>
 
 <div class="container">
-  
-  <div class="kpi-grid">
-    <div class="kpi-card yellow">
-      <div class="kpi-label">Toplam Kalan</div>
-      <div class="kpi-value" id="kpiTotal">-</div>
+
+  <div class="grid-top">
+    <div class="card">
+      <div class="card-label">Toplam Kalan</div>
+      <div class="card-val c-yellow" id="kpiTotal">-</div>
     </div>
-    <div class="kpi-card blue">
-      <div class="kpi-label">Erkek (Toplam)</div>
-      <div class="kpi-value" id="kpiMen">-</div>
+    <div class="card">
+      <div class="card-label">Erkek</div>
+      <div class="card-val c-blue" id="kpiMen">-</div>
     </div>
-    <div class="kpi-card pink">
-      <div class="kpi-label">Kadın (Toplam)</div>
-      <div class="kpi-value" id="kpiWomen">-</div>
+    <div class="card">
+      <div class="card-label">Kadın</div>
+      <div class="card-val c-pink" id="kpiWomen">-</div>
     </div>
-    <div class="kpi-card purple">
-      <div class="kpi-label">Çiftli (Takım)</div>
-      <div class="kpi-value" id="kpiDoubles">-</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Mixed</div>
-      <div class="kpi-value" id="kpiMixed">-</div>
+    <div class="card">
+      <div class="card-label">Doubles / Mixed</div>
+      <div class="card-val" id="kpiTeam">-</div>
     </div>
   </div>
 
-  <div class="main-grid">
-    
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Detaylı Stok Dağılımı</div>
-        <div class="filters">
-          <button class="filter-btn active" onclick="filterChart('ALL')">Tümü</button>
-          <button class="filter-btn" onclick="filterChart('MEN')">Erkek</button>
-          <button class="filter-btn" onclick="filterChart('WOMEN')">Kadın</button>
-          <button class="filter-btn" onclick="filterChart('DOUBLES')">Çiftli</button>
-        </div>
-      </div>
-      <div class="chart-box">
-        <canvas id="barChart"></canvas>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Kategori Oranı</div>
-      </div>
-      <div class="donut-box">
-        <canvas id="donutChart"></canvas>
-      </div>
-
-      <div style="margin-top:30px; border-top:1px solid var(--border); padding-top:15px;">
-        <div class="panel-title" style="font-size:16px; margin-bottom:10px; color:var(--danger);">
-          ⚠️ Tükenmek Üzere (< 50)
-        </div>
-        <div id="lowStockList" class="ticket-list">
-          </div>
-      </div>
-    </div>
-
+  <div class="controls">
+    <button class="btn active" onclick="setFilter('ALL')">TÜMÜ</button>
+    <button class="btn" onclick="setFilter('MEN')">ERKEK (MEN)</button>
+    <button class="btn" onclick="setFilter('WOMEN')">KADIN (WOMEN)</button>
+    <button class="btn" onclick="setFilter('DOUBLES')">ÇİFTLİ (DOUBLES)</button>
+    <button class="btn" onclick="setFilter('MIXED')">MIXED</button>
   </div>
 
-  <div id="errorBox" class="error-box"></div>
+  <div class="chart-section">
+    <div class="chart-header">📊 Güncel Stok Durumu (Son Veri)</div>
+    <div class="chart-box">
+      <canvas id="chartCurrent"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-header">📈 Satış Trendi (Zaman Çizelgesi)</div>
+    <div class="chart-box">
+      <canvas id="chartHistory"></canvas>
+    </div>
+  </div>
+
+  <div id="errorLog"></div>
+
 </div>
 
 <script>
-// --- AYARLAR ---
-const DATA_DIR = "data";
-const MIN_DATE = "03.01.2026";
-
-// --- GLOBAL DEĞİŞKENLER ---
-let allData = [];
-let latestData = null; // En son json verisi
-let barChart = null;
-let donutChart = null;
-
-// --- YARDIMCI FONKSİYONLAR ---
-const parseDate = s => {
-  const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(s);
-  return m ? new Date(Date.UTC(m[3], m[2]-1, m[1])) : null;
+/* --- AYARLAR --- */
+const CONFIG = {
+  dataDir: "data",
+  startDate: "03.01.2026" // Başlangıç tarihi (DD.MM.YYYY)
 };
-const fmtNum = n => n.toLocaleString('tr-TR');
 
-// --- VERİ ÇEKME ---
-async function loadLatestData() {
-  try {
-    // 1. Dosya listesini bul
-    let files = [];
+/* --- GLOBAL VERİ HAVUZU --- */
+let HISTORY = []; // Tüm günlerin verisi burada toplanacak
+let LATEST = null; // En son günün verisi
+let currentFilter = 'ALL';
+
+/* --- CHART INSTANCES --- */
+let charts = { current: null, history: null };
+
+/* --- YARDIMCI FONKSİYONLAR --- */
+const pad = n => String(n).padStart(2, "0");
+const strToDate = s => {
+  const [d,m,y] = s.split(".").map(Number);
+  return new Date(y, m-1, d);
+};
+const dateToStr = d => `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+
+/* --- VERİ OKUMA MOTORU --- */
+// Bu fonksiyon "Brute Force" yöntemiyle çalışır.
+// Başlangıç tarihinden bugüne kadar olası tüm dosya isimlerini (03.01.2026.json, 04.01.2026.json...)
+// tek tek dener. HTML dönerse veya 404 verirse sessizce atlar.
+async function fetchAllData() {
+  const start = strToDate(CONFIG.startDate);
+  const now = new Date();
+  const validData = [];
+  
+  // Bugüne kadar (+1 gün güvenlik payı) döngü kur
+  let curr = start;
+  // Sonsuz döngüden kaçınmak için max 60 gün ileri gitsin
+  let safetyLimit = 0;
+  
+  while(curr <= addDays(now, 1) && safetyLimit < 60) {
+    const fileName = `${dateToStr(curr)}.json`;
+    const url = `${CONFIG.dataDir}/${fileName}?ts=${Date.now()}`; // Cache busting
+    
     try {
-      const r = await fetch(`${DATA_DIR}/index.json?_=${Date.now()}`);
-      if(r.ok) files = await r.json();
-    } catch(e){}
-
-    if(files.length === 0) {
-      // GitHub API Fallback
-      const path = location.pathname.replace(/^\/+/, ""); 
-      const [user, repo] = location.hostname.endsWith("github.io") ? [location.hostname.split(".")[0], path.split("/")[0]] : [null,null];
-      if(user){
-        const api = `https://api.github.com/repos/${user}/${repo}/contents/${DATA_DIR}`;
-        const r = await fetch(api);
-        if(r.ok) {
-          const items = await r.json();
-          files = items.filter(x=>x.name.endsWith(".json")).map(x=>x.name);
+      const res = await fetch(url);
+      
+      // Kilit Nokta: Sadece status 200 VE Content-Type JSON ise işle
+      const cType = res.headers.get("content-type");
+      if(res.ok && cType && cType.includes("application/json")) {
+        const json = await res.json();
+        
+        // Veriyi işle ve listeye ekle
+        if(json.tickets) {
+          validData.push({
+            date: dateToStr(curr),
+            objDate: new Date(curr),
+            tickets: processTickets(json.tickets)
+          });
         }
       }
+    } catch(err) {
+      // Dosya yoksa veya hata varsa atla, konsola basma
     }
-
-    if(files.length === 0) throw new Error("Veri dosyası bulunamadı.");
-
-    // 2. En güncel dosyayı bul
-    const minDt = parseDate(MIN_DATE);
-    const sortedFiles = files
-      .map(f => ({ name: f, date: parseDate(f.replace(".json","")) }))
-      .filter(x => x.date && x.date >= minDt)
-      .sort((a,b) => b.date - a.date); // Yeniden eskiye
-
-    if(!sortedFiles.length) throw new Error("Uygun tarihli veri yok.");
-
-    // 3. En son dosyayı oku
-    const lastFile = sortedFiles[0];
-    const res = await fetch(`${DATA_DIR}/${lastFile.name}`);
-    const json = await res.json();
     
-    // Tarih bilgisini güncelle
-    const d = lastFile.date;
-    document.getElementById("dateBadge").textContent = `Son Veri: ${d.getUTCDate()}.${d.getUTCMonth()+1}.${d.getUTCFullYear()}`;
-
-    return json;
-
-  } catch(err) {
-    document.getElementById("errorBox").style.display = 'block';
-    document.getElementById("errorBox").textContent = err.message;
-    console.error(err);
-    return null;
+    curr = addDays(curr, 1);
+    safetyLimit++;
   }
+
+  if(validData.length === 0) throw new Error("Hiçbir geçerli JSON dosyası bulunamadı.");
+  
+  // Tarihe göre sırala
+  validData.sort((a,b) => a.objDate - b.objDate);
+  
+  HISTORY = validData;
+  LATEST = validData[validData.length - 1]; // En son veri
 }
 
-// --- VERİ İŞLEME MANTIĞI (Parsing) ---
-function processTickets(jsonData) {
-  // JSON'daki 'tickets' array'ini kullanıyoruz
-  const tickets = jsonData.tickets || [];
-  
-  // Kategorize edilmiş liste
-  const processed = tickets.map(t => {
+// Biletleri etiketle (Tagging)
+function processTickets(rawTickets) {
+  return rawTickets.map(t => {
     const name = t.ticket.toUpperCase();
-    const stock = t.stock;
+    const tags = [];
     
-    // Kategori mantığı (Tagging)
-    let tags = [];
+    if(name.includes("MEN") && !name.includes("WOMEN")) tags.push("MEN");
+    if(name.includes("WOMEN")) tags.push("WOMEN");
     if(name.includes("MIXED")) tags.push("MIXED");
-    else if(name.includes("WOMEN")) tags.push("WOMEN"); // 'WOMEN' içinde 'MEN' geçer, o yüzden önce buna bak
-    else if(name.includes("MEN")) tags.push("MEN");
-    
     if(name.includes("DOUBLES")) tags.push("DOUBLES");
-    if(name.includes("SINGLES") || (!name.includes("DOUBLES") && !name.includes("RELAY"))) tags.push("SINGLES");
-    if(name.includes("PRO")) tags.push("PRO");
-    if(name.includes("ADAPTIVE")) tags.push("ADAPTIVE");
-
+    
     return {
-      rawName: t.ticket,
-      stock: stock,
+      name: t.ticket.replace("HYROX ", ""), // Grafiklerde yer kaplamasın diye kısalttık
+      stock: t.stock,
       tags: tags
     };
   });
-
-  return processed;
 }
 
-// --- KPI HESAPLAMA ---
-function calculateKPI(processedData) {
-  let stats = {
-    total: 0,
-    men: 0,
-    women: 0,
-    mixed: 0,
-    doubles: 0
-  };
+/* --- GRAFİK VE UI GÜNCELLEME --- */
 
-  processedData.forEach(p => {
-    stats.total += p.stock;
-    if(p.tags.includes("MEN")) stats.men += p.stock;
-    if(p.tags.includes("WOMEN")) stats.women += p.stock;
-    if(p.tags.includes("MIXED")) stats.mixed += p.stock;
-    if(p.tags.includes("DOUBLES")) stats.doubles += p.stock;
+function updateDashboard() {
+  if(!LATEST) return;
+
+  // 1. Header Bilgisi
+  document.getElementById("lastUpdate").textContent = `Son Veri: ${LATEST.date} (${HISTORY.length} gün)`;
+
+  // 2. KPI Hesapla (Filtreden bağımsız genel toplam)
+  let kpi = { total:0, men:0, women:0, team:0 };
+  LATEST.tickets.forEach(t => {
+    kpi.total += t.stock;
+    if(t.tags.includes("MEN")) kpi.men += t.stock;
+    if(t.tags.includes("WOMEN")) kpi.women += t.stock;
+    if(t.tags.includes("DOUBLES") || t.tags.includes("MIXED")) kpi.team += t.stock;
   });
+  
+  document.getElementById("kpiTotal").textContent = kpi.total.toLocaleString();
+  document.getElementById("kpiMen").textContent = kpi.men.toLocaleString();
+  document.getElementById("kpiWomen").textContent = kpi.women.toLocaleString();
+  document.getElementById("kpiTeam").textContent = kpi.team.toLocaleString();
 
-  document.getElementById("kpiTotal").textContent = fmtNum(stats.total);
-  document.getElementById("kpiMen").textContent = fmtNum(stats.men);
-  document.getElementById("kpiWomen").textContent = fmtNum(stats.women);
-  document.getElementById("kpiDoubles").textContent = fmtNum(stats.doubles);
-  document.getElementById("kpiMixed").textContent = fmtNum(stats.mixed);
-
-  return stats; // Donut chart için lazım
+  // 3. Grafikleri Çiz
+  drawCurrentChart();
+  drawHistoryChart();
 }
 
-// --- GRAFİK OLUŞTURMA (BAR) ---
-function renderBarChart(data, filterType) {
-  const ctx = document.getElementById("barChart").getContext("2d");
+function filterData(ticketList) {
+  if(currentFilter === 'ALL') return ticketList;
+  // Seçilen filtre ticket'ın tags dizisinde var mı?
+  return ticketList.filter(t => t.tags.includes(currentFilter));
+}
+
+// Grafik 1: Güncel Durum (Bar)
+function drawCurrentChart() {
+  const ctx = document.getElementById("chartCurrent").getContext("2d");
+  const filtered = filterData(LATEST.tickets);
   
-  // Filtreleme
-  let filtered = data;
-  if(filterType !== 'ALL') {
-    filtered = data.filter(item => item.tags.includes(filterType));
-  }
-  
-  // Sıralama (Stok çoktan aza)
+  // Stok sayısına göre sırala
   filtered.sort((a,b) => b.stock - a.stock);
 
-  const labels = filtered.map(x => x.rawName.replace("HYROX ", "").replace(" | Friday", "").replace(" | Saturday", ""));
-  const values = filtered.map(x => x.stock);
-  const colors = values.map(v => v < 50 ? '#ef4444' : (v < 150 ? '#f59e0b' : '#fbbf24'));
+  const labels = filtered.map(t => t.name);
+  const data = filtered.map(t => t.stock);
+  const colors = data.map(v => v < 50 ? '#ef4444' : (v < 150 ? '#f59e0b' : '#10b981'));
 
-  if(barChart) barChart.destroy();
+  if(charts.current) charts.current.destroy();
 
-  barChart = new Chart(ctx, {
+  charts.current = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: labels,
       datasets: [{
-        label: 'Kalan Bilet',
-        data: values,
+        label: 'Adet',
+        data: data,
         backgroundColor: colors,
         borderRadius: 4
       }]
@@ -415,100 +326,101 @@ function renderBarChart(data, filterType) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      indexAxis: 'y', // Yatay bar
-      plugins: {
-        legend: { display: false }
-      },
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
       scales: {
         x: { grid: { color: '#2a2f3a' }, ticks: { color: '#9ca3af' } },
-        y: { grid: { display: false }, ticks: { color: '#fff', font: { size: 11 } } }
+        y: { grid: { display: false }, ticks: { color: '#fff', font: {size: 11} } }
       }
     }
   });
 }
 
-// --- GRAFİK OLUŞTURMA (DONUT) ---
-function renderDonutChart(stats) {
-  const ctx = document.getElementById("donutChart").getContext("2d");
+// Grafik 2: Tarihçe (Line)
+function drawHistoryChart() {
+  const ctx = document.getElementById("chartHistory").getContext("2d");
   
-  if(donutChart) donutChart.destroy();
+  // X Ekseni: Tarihler
+  const labels = HISTORY.map(h => h.date.substring(0, 5)); // "03.01" formatı
+  
+  // Dataset oluşturma mantığı:
+  // Filtreye uyan tüm UNIQ bilet isimlerini bul
+  const allTicketNames = new Set();
+  HISTORY.forEach(day => {
+    filterData(day.tickets).forEach(t => allTicketNames.add(t.name));
+  });
 
-  donutChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Erkek', 'Kadın', 'Mixed'],
-      datasets: [{
-        data: [stats.men, stats.women, stats.mixed],
-        backgroundColor: ['#3b82f6', '#ec4899', '#9ca3af'],
-        borderWidth: 0,
-        hoverOffset: 10
-      }]
-    },
+  const datasets = Array.from(allTicketNames).map((tName, index) => {
+    // Her gün için bu biletin stoğunu bul
+    const dataPoints = HISTORY.map(day => {
+      const found = day.tickets.find(t => t.name === tName);
+      return found ? found.stock : null; // O gün bilet yoksa null (çizgi kopuk olur) veya 0
+    });
+
+    // Renk paleti (Döngüsel)
+    const palette = ['#3b82f6', '#ef4444', '#fbbf24', '#10b981', '#ec4899', '#8b5cf6', '#f97316'];
+    const color = palette[index % palette.length];
+
+    return {
+      label: tName,
+      data: dataPoints,
+      borderColor: color,
+      backgroundColor: color,
+      tension: 0.3,
+      borderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 6
+    };
+  });
+
+  if(charts.history) charts.history.destroy();
+
+  charts.history = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'right', labels: { color: '#fff' } }
+        legend: { labels: { color: '#9ca3af', boxWidth: 10 } },
+        tooltip: { 
+          backgroundColor: '#161920', 
+          titleColor: '#fff', 
+          bodyColor: '#ccc',
+          borderColor: '#333',
+          borderWidth: 1
+        }
+      },
+      scales: {
+        x: { grid: { color: '#2a2f3a' }, ticks: { color: '#9ca3af' } },
+        y: { grid: { color: '#2a2f3a' }, ticks: { color: '#9ca3af' } }
       }
     }
   });
 }
 
-// --- DÜŞÜK STOK LİSTESİ ---
-function renderLowStock(data) {
-  const listEl = document.getElementById("lowStockList");
-  listEl.innerHTML = "";
-  
-  const lowItems = data.filter(x => x.stock < 50).sort((a,b) => a.stock - b.stock);
-  
-  if(lowItems.length === 0) {
-    listEl.innerHTML = "<div style='color:#666; font-style:italic;'>Kritik seviyede bilet yok.</div>";
-    return;
-  }
-
-  lowItems.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "ticket-item low";
-    div.innerHTML = `
-      <div class="ticket-name">${item.rawName}</div>
-      <div class="ticket-stock">${item.stock}</div>
-    `;
-    listEl.appendChild(div);
+/* --- INIT & CONTROLS --- */
+window.setFilter = (type) => {
+  currentFilter = type;
+  // Buton class güncelle
+  document.querySelectorAll('.btn').forEach(b => {
+    b.classList.toggle('active', b.innerText.includes(type) || (type==='ALL' && b.innerText==='TÜMÜ'));
   });
-}
-
-// --- MAIN FLOW ---
-let processedDataGlobal = [];
-
-async function init() {
-  const jsonData = await loadLatestData();
-  if(!jsonData) return;
-
-  processedDataGlobal = processTickets(jsonData);
-  
-  // 1. KPI Kartları
-  const stats = calculateKPI(processedDataGlobal);
-  
-  // 2. Grafikler
-  renderBarChart(processedDataGlobal, 'ALL');
-  renderDonutChart(stats);
-  
-  // 3. Liste
-  renderLowStock(processedDataGlobal);
-}
-
-// --- INTERACTION ---
-window.filterChart = (type) => {
-  // Buton stilleri
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-  
-  // Grafiği güncelle
-  renderBarChart(processedDataGlobal, type);
+  updateDashboard();
 };
 
-init();
-
+(async function init() {
+  try {
+    await fetchAllData();
+    updateDashboard();
+  } catch(err) {
+    const el = document.getElementById("errorLog");
+    el.style.display = "block";
+    el.textContent = "HATA: " + err.message + "\nLütfen 'data' klasöründe en az bir tane 'GG.AA.YYYY.json' formatında dosya olduğundan emin olun.";
+  }
+})();
 </script>
+
 </body>
 </html>
