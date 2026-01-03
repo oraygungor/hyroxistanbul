@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>Hyrox Analiz (Fixed)</title>
+  <title>Hyrox Analiz (Final)</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -27,15 +27,13 @@
 
     .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
 
-    /* FILTERS - Düzeltildi */
+    /* FILTERS */
     .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: var(--card); padding: 10px; border-radius: 8px; border:1px solid var(--border); }
     .btn {
       flex: 1; background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 10px; border-radius: 6px;
       cursor: pointer; font-weight: 600; font-size: 13px; transition: 0.2s; white-space: nowrap;
     }
     .btn:hover { background: #222; color: #fff; }
-    
-    /* Active state için sadece .active class'ı yeterli */
     .btn.active { background: var(--accent); color: #000; border-color: var(--accent); opacity: 1; }
 
     .chart-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
@@ -68,10 +66,9 @@
 
   <div class="controls">
     <button class="btn active" data-key="ALL" onclick="setFilter('ALL')">GENEL ÖZET</button>
-    <button class="btn" data-key="MEN" onclick="setFilter('MEN')">ERKEK</button>
-    <button class="btn" data-key="WOMEN" onclick="setFilter('WOMEN')">KADIN</button>
-    <button class="btn" data-key="DOUBLES" onclick="setFilter('DOUBLES')">ÇİFTLİ</button>
-    <button class="btn" data-key="MIXED" onclick="setFilter('MIXED')">MIXED</button>
+    <button class="btn" data-key="MEN" onclick="setFilter('MEN')">ERKEK (SINGLES)</button>
+    <button class="btn" data-key="WOMEN" onclick="setFilter('WOMEN')">KADIN (SINGLES)</button>
+    <button class="btn" data-key="DOUBLES" onclick="setFilter('DOUBLES')">DOUBLE (HEPSİ)</button>
   </div>
 
   <div class="chart-section">
@@ -169,29 +166,30 @@ function processTickets(list) {
     let tags = [];
     const n = t.ticket.toUpperCase();
     
-    // Tag işlemleri (Strict Logic)
-    if(n.includes("MEN") && !n.includes("WOMEN")) tags.push("MEN");
-    if(n.includes("WOMEN")) tags.push("WOMEN");
-    if(n.includes("MIXED")) tags.push("MIXED");
-    if(n.includes("DOUBLES")) tags.push("DOUBLES");
+    // YENİ MANTIK:
+    // 1. Eğer ismin içinde DOUBLES geçiyorsa (Mixed dahil) -> DOUBLES tag'i al.
+    // 2. Yoksa, WOMEN ise -> WOMEN
+    // 3. Yoksa, MEN ise -> MEN
     
-    let cleanName = t.ticket
-      .replace("HYROX ", "")
-      .replace(" | Friday", "")
-      .replace(" | Saturday", "")
-      .replace(" | Sunday", "");
+    if (n.includes("DOUBLES")) {
+        tags.push("DOUBLES");
+    } else if (n.includes("WOMEN")) {
+        tags.push("WOMEN");
+    } else if (n.includes("MEN")) {
+        tags.push("MEN");
+    }
+    
+    // GÜN İSİMLERİ KALSIN DİYE SADECE BAŞTAKİ "HYROX " KISMINI SİLİYORUZ
+    let cleanName = t.ticket.replace("HYROX ", "");
 
     return { id: t.ticket, name: cleanName, stock: t.stock, tags };
   });
 }
 
 /* --- UI ACTIONS --- */
-
-// BUTON SEÇİM MANTIĞI BURADA DÜZELTİLDİ
 window.setFilter = (f) => {
   FILTER = f;
   
-  // Tüm butonları gez, data-key özelliği gönderilen f ile BİREBİR aynıysa yak.
   document.querySelectorAll(".btn").forEach(b => {
     if (b.getAttribute('data-key') === f) {
       b.classList.add("active");
@@ -213,9 +211,10 @@ function updateHistoryChart() {
   const modeLabel = document.getElementById("chartModeLabel");
 
   if(FILTER === 'ALL') {
-    modeLabel.textContent = "Özet (Kategori Toplamları)";
-    const groups = ['MEN', 'WOMEN', 'DOUBLES', 'MIXED'];
-    const colors = ['#3b82f6', '#ec4899', '#fbbf24', '#a855f7']; 
+    modeLabel.textContent = "Kategori Toplamları";
+    // Mixed artık DOUBLES içinde olduğu için buraya eklemeye gerek yok
+    const groups = ['MEN', 'WOMEN', 'DOUBLES'];
+    const colors = ['#3b82f6', '#ec4899', '#fbbf24']; // Mavi, Pembe, Sarı
     
     datasets = groups.map((g, i) => {
       return {
@@ -230,7 +229,7 @@ function updateHistoryChart() {
     });
 
   } else {
-    modeLabel.textContent = FILTER + " Kategorisi Detayları";
+    modeLabel.textContent = FILTER + " Detayları";
     const ticketNames = new Set();
     HISTORY.forEach(day => {
       day.tickets.filter(t => t.tags.includes(FILTER)).forEach(t => ticketNames.add(t.name));
