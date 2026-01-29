@@ -1,0 +1,78 @@
+{
+  "event_url": "https://turkiye.hyrox.com/checkout/hyrox-istanbul-season-25-26-y3v06t",
+  "fetched_at": "2026-01-29T08:06:31.050082+01:00",
+  "tickets": [
+    {
+      "parkur": "Singles",
+      "ticket": "HYROX MEN | Friday",
+      "stock": 355
+    },
+    {
+      "parkur": "Singles",
+      "ticket": "HYROX PRO MEN | Friday",
+      "stock": 241
+    },
+    {
+      "parkur": "Doubles",
+      "ticket": "HYROX PRO DOUBLES WOMEN | Friday",
+      "stock": 34
+    },
+    {
+      "parkur": "Doubles",
+      "ticket": "HYROX DOUBLES MIXED | Friday",
+      "stock": 175
+    },
+    {
+      "parkur": "Doubles",
+      "ticket": "HYROX PRO DOUBLES MEN | Friday",
+      "stock": 41
+    },
+    {
+      "parkur": "Doubles",
+      "ticket": "HYROX DOUBLES WOMEN | Saturday",
+      "stock": 367
+    },
+    {
+      "parkur": "Doubles",
+      "ticket": "HYROX DOUBLES MEN | Saturday",
+      "stock": 207
+    },
+    {
+      "parkur": "Singles",
+      "ticket": "HYROX ADAPTIVE MEN | Friday",
+      "stock": 9
+    },
+    {
+      "parkur": "Singles",
+      "ticket": "HYROX ADAPTIVE WOMEN | Saturday",
+      "stock": 8
+    },
+    {
+      "parkur": "Singles",
+      "ticket": "HYROX PRO WOMEN | Friday",
+      "stock": 72
+    },
+    {
+      "parkur": "Singles",
+      "ticket": "HYROX WOMEN | Saturday",
+      "stock": 235
+    }
+  ],
+  "by_parkur": {
+    "Singles": {
+      "HYROX MEN | Friday": 355,
+      "HYROX PRO MEN | Friday": 241,
+      "HYROX ADAPTIVE MEN | Friday": 9,
+      "HYROX ADAPTIVE WOMEN | Saturday": 8,
+      "HYROX PRO WOMEN | Friday": 72,
+      "HYROX WOMEN | Saturday": 235
+    },
+    "Doubles": {
+      "HYROX PRO DOUBLES WOMEN | Friday": 34,
+      "HYROX DOUBLES MIXED | Friday": 175,
+      "HYROX PRO DOUBLES MEN | Friday": 41,
+      "HYROX DOUBLES WOMEN | Saturday": 367,
+      "HYROX DOUBLES MEN | Saturday": 207
+    }
+  }
+}
